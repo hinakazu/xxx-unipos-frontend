@@ -187,32 +187,11 @@ export function ProfileActivity() {
 
             {activeTab === 'reactions' && (
               <>
-                {activities.reactions.length > 0 ? (
-                  activities.reactions.map((reaction) => (
-                    <div key={reaction.id} className="p-4 bg-white/5 rounded-lg">
-                      <div className="flex items-start space-x-3">
-                        <div className="text-2xl">{getReactionIcon(reaction.reactionType)}</div>
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <span className="text-white font-semibold">
-                              {reaction.type === 'gave' 
-                                ? `${reaction.postAuthor}さんの投稿にリアクション` 
-                                : `${reaction.user}さんがリアクション`}
-                            </span>
-                            <span className="text-white/60 text-sm">{formatDate(reaction.createdAt)}</span>
-                          </div>
-                          <p className="text-white/80 text-sm">{reaction.postContent}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-white/60">
-                    <Heart className="w-12 h-12 mx-auto mb-4 text-white/40" />
-                    <p>まだリアクションがありません</p>
-                    <p className="text-sm mt-2">投稿にリアクションしてみましょう！</p>
-                  </div>
-                )}
+                <div className="text-center py-8 text-white/60">
+                  <Heart className="w-12 h-12 mx-auto mb-4 text-white/40" />
+                  <p>まだリアクションがありません</p>
+                  <p className="text-sm mt-2">投稿にリアクションしてみましょう！</p>
+                </div>
               </>
             )}
 

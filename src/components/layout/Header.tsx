@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
 import { Bell, Search, User, Settings, LogOut } from 'lucide-react';
+import { motion } from 'framer-motion';
 import {
   Navbar,
   NavbarBrand,
@@ -25,6 +26,7 @@ import {
   CardHeader,
   Divider,
 } from '@heroui/react';
+import { EnhancedButton } from '@/components/ui/EnhancedButton';
 
 export function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -35,62 +37,104 @@ export function Header() {
   };
 
   return (
-    <Navbar maxWidth="full" className="glass-effect border-none bg-transparent">
-      <NavbarBrand>
-        <Link href="/" className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-violet-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">U</span>
-          </div>
-          <span className="text-xl font-bold text-white">Unipos</span>
-        </Link>
-      </NavbarBrand>
+    <motion.div
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Navbar maxWidth="full" className="glass-effect border-none bg-transparent backdrop-blur-xl">
+        <NavbarBrand>
+          <Link href="/" className="flex items-center space-x-2">
+            <motion.div 
+              className="w-8 h-8 bg-gradient-to-r from-pink-500 to-violet-500 rounded-lg flex items-center justify-center"
+              whileHover={{ scale: 1.1, rotate: 360 }}
+              transition={{ duration: 0.3 }}
+            >
+              <span className="text-white font-bold text-lg">U</span>
+            </motion.div>
+            <motion.span 
+              className="text-xl font-bold text-white"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
+              Unipos
+            </motion.span>
+          </Link>
+        </NavbarBrand>
 
-      <NavbarContent className="hidden md:flex gap-4" justify="center">
-        <NavbarItem>
-          <Link href="/" className="text-white/80 hover:text-white transition-colors font-medium">
-            タイムライン
-          </Link>
-        </NavbarItem>
-        <NavbarItem>
-          <Link href="/ranking" className="text-white/80 hover:text-white transition-colors font-medium">
-            ランキング
-          </Link>
-        </NavbarItem>
-        <NavbarItem>
-          <Link href="/analytics" className="text-white/80 hover:text-white transition-colors font-medium">
-            分析
-          </Link>
-        </NavbarItem>
-      </NavbarContent>
+        <NavbarContent className="hidden md:flex gap-4" justify="center">
+          {[
+            { href: '/', label: 'タイムライン' },
+            { href: '/ranking', label: 'ランキング' },
+            { href: '/analytics', label: '分析' }
+          ].map((item, index) => (
+            <NavbarItem key={item.href}>
+              <motion.div
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Link href={item.href} className="relative text-white/80 hover:text-white transition-colors font-medium group">
+                  {item.label}
+                  <motion.div
+                    className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-500 to-violet-500 group-hover:w-full transition-all duration-300"
+                    whileHover={{ width: '100%' }}
+                  />
+                </Link>
+              </motion.div>
+            </NavbarItem>
+          ))}
+        </NavbarContent>
 
       <NavbarContent justify="end">
-        <NavbarItem>
-          <Input
-            type="text"
-            placeholder="検索..."
-            startContent={<Search className="w-4 h-4 text-white/60" />}
-            className="w-64"
-            classNames={{
-              inputWrapper: "bg-white/10 border-white/20 hover:bg-white/20",
-              input: "text-white placeholder:text-white/60"
-            }}
-          />
-        </NavbarItem>
+          <NavbarItem>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Input
+                type="text"
+                placeholder="検索..."
+                startContent={<Search className="w-4 h-4 text-white/60" />}
+                className="w-64"
+                classNames={{
+                  inputWrapper: "bg-white/10 border-white/20 hover:bg-white/20 backdrop-blur-md transition-all duration-300",
+                  input: "text-white placeholder:text-white/60"
+                }}
+              />
+            </motion.div>
+          </NavbarItem>
         
-        <NavbarItem>
-          <Popover placement="bottom-end">
-            <PopoverTrigger>
-              <Button isIconOnly variant="light" className="relative text-white/80 hover:text-white hover:bg-white/10">
-                <Bell className="w-5 h-5" />
-                <Badge
-                  size="sm"
-                  color="danger"
-                  className="absolute -top-1 -right-1"
-                >
-                  3
-                </Badge>
-              </Button>
-            </PopoverTrigger>
+          <NavbarItem>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Popover placement="bottom-end">
+                <PopoverTrigger>
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Button isIconOnly variant="light" className="relative text-white/80 hover:text-white hover:bg-white/10 backdrop-blur-md">
+                      <Bell className="w-5 h-5" />
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <Badge
+                          size="sm"
+                          color="danger"
+                          className="absolute -top-1 -right-1"
+                        >
+                          3
+                        </Badge>
+                      </motion.div>
+                    </Button>
+                  </motion.div>
+                </PopoverTrigger>
             <PopoverContent className="w-80">
               <Card className="card-gradient border-0">
                 <CardHeader>
@@ -125,16 +169,32 @@ export function Header() {
               </Card>
             </PopoverContent>
           </Popover>
-        </NavbarItem>
+            </motion.div>
+          </NavbarItem>
 
-        <NavbarItem>
-          <Dropdown>
-            <DropdownTrigger>
-              <Button variant="light" className="p-0 min-w-0 gap-2 text-white/80 hover:text-white hover:bg-white/10">
-                <Avatar size="sm" name={session?.user?.name || "ユーザー"} className="bg-gradient-to-r from-pink-500 to-violet-500 text-white" />
-                <span className="hidden md:block text-sm font-medium">{session?.user?.name || "ユーザー"}</span>
-              </Button>
-            </DropdownTrigger>
+          <NavbarItem>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Dropdown>
+                <DropdownTrigger>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button variant="light" className="p-0 min-w-0 gap-2 text-white/80 hover:text-white hover:bg-white/10 backdrop-blur-md">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Avatar size="sm" name={session?.user?.name || "ユーザー"} className="bg-gradient-to-r from-pink-500 to-violet-500 text-white" />
+                      </motion.div>
+                      <span className="hidden md:block text-sm font-medium">{session?.user?.name || "ユーザー"}</span>
+                    </Button>
+                  </motion.div>
+                </DropdownTrigger>
             <DropdownMenu>
               <DropdownItem key="profile" startContent={<User className="w-4 h-4" />}>
                 <Link href="/profile">プロフィール</Link>
@@ -146,9 +206,11 @@ export function Header() {
                 ログアウト
               </DropdownItem>
             </DropdownMenu>
-          </Dropdown>
-        </NavbarItem>
-      </NavbarContent>
-    </Navbar>
+              </Dropdown>
+            </motion.div>
+          </NavbarItem>
+        </NavbarContent>
+      </Navbar>
+    </motion.div>
   );
 }

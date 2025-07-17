@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { PostCard } from './PostCard';
+import { RefreshCw } from 'lucide-react';
+import { EnhancedCard } from '@/components/ui/EnhancedCard';
+import { EnhancedButton } from '@/components/ui/EnhancedButton';
 
 // モックデータ
 const mockPosts = [
@@ -172,23 +176,99 @@ export function Timeline() {
     createdAt: post.createdAt,
   }));
 
+  const fetchPosts = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/posts');
+      if (response.ok) {
+        const postsData = await response.json();
+        setPosts(postsData);
+      }
+    } catch (error) {
+      console.error('投稿データ取得エラー:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      <motion.div 
+        className="flex items-center justify-between"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.h2 
+          className="text-2xl font-bold text-white"
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          タイムライン
+        </motion.h2>
+        <motion.div
+          initial={{ x: 20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <EnhancedButton
+            onClick={fetchPosts}
+            variant="glass"
+            size="sm"
+            icon={<RefreshCw className="w-4 h-4" />}
+            className="text-white/80 hover:text-white"
+          >
+            更新
+          </EnhancedButton>
+        </motion.div>
+      </motion.div>
 
       {/* 投稿一覧 */}
       <div className="space-y-4">
         {isLoading ? (
-          <div className="text-center py-12 text-white/60">
-            <p>読み込み中...</p>
-          </div>
+          <EnhancedCard variant="glass" className="text-center py-12">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="inline-block rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"
+            />
+            <motion.p 
+              className="text-white/60"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              読み込み中...
+            </motion.p>
+          </EnhancedCard>
         ) : transformedPosts.length === 0 ? (
-          <div className="text-center py-12 text-white/60">
-            <p>まだ投稿がありません</p>
-          </div>
+          <EnhancedCard variant="glass" className="text-center py-12">
+            <motion.p 
+              className="text-white/60"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              まだ投稿がありません
+            </motion.p>
+          </EnhancedCard>
         ) : (
-          transformedPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))
+          <motion.div className="space-y-4">
+            {transformedPosts.map((post, index) => (
+              <motion.div
+                key={post.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.5, 
+                  delay: index * 0.1,
+                  ease: "easeOut"
+                }}
+              >
+                <PostCard post={post} />
+              </motion.div>
+            ))}
+          </motion.div>
         )}
       </div>
     </div>

@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Edit3, MapPin, Calendar, Mail, Phone, Building } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { EnhancedCard } from '@/components/ui/EnhancedCard';
+import { EnhancedButton } from '@/components/ui/EnhancedButton';
 
 interface UserProfile {
   id: string;
@@ -82,42 +85,75 @@ export function ProfileInfo() {
   }
 
   return (
-    <div className="card-gradient p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-white">プロフィール</h2>
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-        >
-          <Edit3 className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* アバターと基本情報 */}
-      <div className="text-center mb-6">
-        <div className="w-24 h-24 bg-gradient-to-r from-pink-500 to-violet-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span className="text-white font-bold text-3xl">
-            {profile.name ? profile.name.charAt(0) : 'U'}
-          </span>
+    <EnhancedCard variant="glass" animated={true} glowEffect={true}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <motion.h2 
+            className="text-xl font-bold text-white"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            プロフィール
+          </motion.h2>
+          <motion.button
+            onClick={() => setIsEditing(!isEditing)}
+            className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors backdrop-blur-md"
+            whileHover={{ scale: 1.1, rotate: 15 }}
+            whileTap={{ scale: 0.9 }}
+            initial={{ scale: 0, rotate: 45 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Edit3 className="w-4 h-4" />
+          </motion.button>
         </div>
+
+        {/* アバターと基本情報 */}
+        <motion.div 
+          className="text-center mb-6"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          <motion.div 
+            className="w-24 h-24 bg-gradient-to-r from-pink-500 to-violet-500 rounded-full flex items-center justify-center mx-auto mb-4"
+            whileHover={{ scale: 1.1, rotate: 360 }}
+            animate={{ 
+              boxShadow: [
+                '0 0 20px rgba(236, 72, 153, 0.3)',
+                '0 0 30px rgba(139, 92, 246, 0.3)',
+                '0 0 20px rgba(236, 72, 153, 0.3)'
+              ]
+            }}
+            transition={{ duration: 0.3 }}
+          >
+            <span className="text-white font-bold text-3xl">
+              {profile.name ? profile.name.charAt(0) : 'U'}
+            </span>
+          </motion.div>
         
-        {isEditing ? (
-          <div className="space-y-2">
-            <input
-              type="text"
-              value={profile.name}
-              onChange={(e) => setProfile({...profile, name: e.target.value})}
-              className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-center"
-              placeholder="名前"
-            />
-          </div>
-        ) : (
-          <div>
-            <h3 className="text-xl font-bold text-white mb-1">{profile.name || 'ユーザー名未設定'}</h3>
-            <p className="text-white/80">{profile.email}</p>
-          </div>
-        )}
-      </div>
+          {isEditing ? (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={profile.name}
+                onChange={(e) => setProfile({...profile, name: e.target.value})}
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-center"
+                placeholder="名前"
+              />
+            </div>
+          ) : (
+            <div>
+              <h3 className="text-xl font-bold text-white mb-1">{profile.name || 'ユーザー名未設定'}</h3>
+              <p className="text-white/80">{profile.email}</p>
+            </div>
+          )}
+        </motion.div>
 
       {/* 詳細情報 */}
       <div className="space-y-4">
@@ -207,23 +243,34 @@ export function ProfileInfo() {
         )}
       </div>
 
-      {/* 編集時の保存ボタン */}
-      {isEditing && (
-        <div className="mt-6 flex space-x-3">
-          <button
-            onClick={handleSave}
-            className="flex-1 px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all duration-200"
+        {/* 編集時の保存ボタン */}
+        {isEditing && (
+          <motion.div 
+            className="mt-6 flex space-x-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
           >
-            保存
-          </button>
-          <button
-            onClick={() => setIsEditing(false)}
-            className="flex-1 px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
-          >
-            キャンセル
-          </button>
-        </div>
-      )}
-    </div>
+            <EnhancedButton
+              onClick={handleSave}
+              variant="cosmic"
+              size="lg"
+              className="flex-1"
+              glowEffect={true}
+            >
+              保存
+            </EnhancedButton>
+            <EnhancedButton
+              onClick={() => setIsEditing(false)}
+              variant="glass"
+              size="lg"
+              className="flex-1"
+            >
+              キャンセル
+            </EnhancedButton>
+          </motion.div>
+        )}
+      </motion.div>
+    </EnhancedCard>
   );
 }

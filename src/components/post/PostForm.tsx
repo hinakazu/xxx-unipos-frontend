@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Send } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { usePoints } from '@/hooks/usePoints';
+import { EnhancedCard } from '@/components/ui/EnhancedCard';
+import { EnhancedButton } from '@/components/ui/EnhancedButton';
 
 interface User {
   id: string;
@@ -77,17 +80,29 @@ export function PostForm() {
   };
 
   return (
-    <div className="card-gradient p-6">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <EnhancedCard variant="gradient" animated={true} glowEffect={true}>
+      <motion.form 
+        onSubmit={handleSubmit} 
+        className="space-y-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
 
         {/* 宛先選択 */}
-        <div className="flex items-center space-x-4">
+        <motion.div 
+          className="flex items-center space-x-4"
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
           <label className="text-sm font-medium text-white">宛先:</label>
-          <select
+          <motion.select
             value={selectedUser}
             onChange={(e) => setSelectedUser(e.target.value)}
-            className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent text-white"
+            className="flex-1 px-3 py-2 bg-white/20 border border-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-white backdrop-blur-md transition-all duration-300 shadow-lg"
             required
+            whileFocus={{ scale: 1.02 }}
           >
             <option value="" className="text-gray-900">メンバーを選択してください</option>
             {users.map((user) => (
@@ -95,59 +110,88 @@ export function PostForm() {
                 {user.name} ({user.department || '部署未設定'})
               </option>
             ))}
-          </select>
-        </div>
+          </motion.select>
+        </motion.div>
 
         {/* メッセージ入力 */}
-        <div>
-          <textarea
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <motion.textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="感謝の気持ちを込めてメッセージを書いてください..."
-            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent resize-none text-white placeholder:text-white/60"
+            className="w-full px-4 py-3 bg-white/20 border border-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 resize-none text-white placeholder:text-white/70 backdrop-blur-md transition-all duration-300 shadow-lg"
             rows={4}
             required
+            whileFocus={{ scale: 1.02 }}
           />
-        </div>
+        </motion.div>
 
         {/* ポイント選択 */}
-        <div className="flex items-center space-x-4">
+        <motion.div 
+          className="flex items-center space-x-4"
+          initial={{ x: 20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
           <label className="text-sm font-medium text-white">ポイント:</label>
           <div className="flex space-x-2">
-            {[50, 100, 200, 500].map((point) => (
-              <button
+            {[50, 100, 200, 500].map((point, index) => (
+              <motion.button
                 key={point}
                 type="button"
                 onClick={() => setPoints(point)}
                 className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                   points === point
-                    ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white'
-                    : 'bg-white/10 text-white/80 hover:bg-white/20'
-                }`}
+                    ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg'
+                    : 'bg-white/20 text-white/90 hover:bg-white/30 border border-white/30'
+                } backdrop-blur-md shadow-md`}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.4 + index * 0.1 }}
               >
                 {point}pt
-              </button>
+              </motion.button>
             ))}
           </div>
-          <div className="text-sm text-white/60">
+          <motion.div 
+            className="text-sm text-white/60"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+          >
             残り: <span className="font-medium text-yellow-300">{availablePoints}pt</span>
             <br />
             <span className="text-xs">次回リセット: {getTimeUntilReset()}</span>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* アクションボタン */}
-        <div className="flex items-center justify-end">
-          <button
+        <motion.div 
+          className="flex items-center justify-end"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.9 }}
+        >
+          <EnhancedButton
             type="submit"
             disabled={!content || !selectedUser || isLoading}
-            className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-pink-500 to-violet-500 text-white rounded-lg hover:from-pink-600 hover:to-violet-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
+            variant="gradient"
+            size="lg"
+            loading={isLoading}
+            icon={<Send className="w-4 h-4" />}
+            glowEffect={true}
+            rippleEffect={true}
           >
-            <Send className="w-4 h-4" />
-            <span>{isLoading ? '投稿中...' : '投稿する'}</span>
-          </button>
-        </div>
-      </form>
-    </div>
+            {isLoading ? '投稿中...' : '投稿する'}
+          </EnhancedButton>
+        </motion.div>
+      </motion.form>
+    </EnhancedCard>
   );
 }
