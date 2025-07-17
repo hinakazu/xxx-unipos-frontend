@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { createNotification } from '@/app/api/notifications/route'
 
 export const dynamic = 'force-dynamic'
 
@@ -196,6 +197,16 @@ export async function POST(request: NextRequest) {
           type: 'POST_RECEIVE',
         }
       })
+
+      // 通知を作成
+      await createNotification(
+        recipientId,
+        session.user.id,
+        'POST_RECEIVED',
+        '新しい感謝が届きました！',
+        `${sender.name || '誰かさん'}からあなたに${points}ポイントの感謝が送られました`,
+        post.id
+      )
 
       return post
     })

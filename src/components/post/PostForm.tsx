@@ -17,7 +17,7 @@ interface User {
 export function PostForm() {
   const [content, setContent] = useState('');
   const [selectedUser, setSelectedUser] = useState('');
-  const [points, setPoints] = useState(100);
+  const [points, setPoints] = useState(50);
   const [postType, setPostType] = useState('gratitude');
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -75,7 +75,7 @@ export function PostForm() {
         console.log('投稿成功:', result);
         setContent('');
         setSelectedUser('');
-        setPoints(100);
+        setPoints(50);
         alert('投稿しました！');
         // ページをリロードしてタイムラインを更新
         window.location.reload();
@@ -152,15 +152,18 @@ export function PostForm() {
         >
           <label className="text-sm font-medium text-white">ポイント:</label>
           <div className="flex space-x-2">
-            {[50, 100, 200, 500].map((point, index) => (
+            {[50, 100, 200, 300].map((point, index) => (
               <motion.button
                 key={point}
                 type="button"
                 onClick={() => setPoints(point)}
+                disabled={availablePoints < point}
                 className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                   points === point
                     ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg'
-                    : 'bg-white/20 text-white/90 hover:bg-white/30 border border-white/30'
+                    : availablePoints < point
+                      ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
+                      : 'bg-white/20 text-white/90 hover:bg-white/30 border border-white/30'
                 } backdrop-blur-md shadow-md`}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -193,7 +196,7 @@ export function PostForm() {
         >
           <EnhancedButton
             type="submit"
-            disabled={!content || !selectedUser || isLoading}
+            disabled={!content || !selectedUser || isLoading || availablePoints < points}
             variant="gradient"
             size="lg"
             loading={isLoading}
@@ -201,7 +204,7 @@ export function PostForm() {
             glowEffect={true}
             rippleEffect={true}
           >
-            {isLoading ? '投稿中...' : '投稿する'}
+            {isLoading ? '投稿中...' : availablePoints < points ? 'ポイント不足' : '投稿する'}
           </EnhancedButton>
         </motion.div>
       </motion.form>

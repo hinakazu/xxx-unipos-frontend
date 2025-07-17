@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
@@ -29,8 +29,31 @@ import {
 } from '@heroui/react';
 import { EnhancedButton } from '@/components/ui/EnhancedButton';
 
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  sender: {
+    id: string;
+    name: string;
+    image: string | null;
+    department: string | null;
+  } | null;
+  post: {
+    id: string;
+    content: string;
+    points: number;
+  } | null;
+}
+
 export function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -41,6 +64,92 @@ export function Header() {
   const handleNavigation = (path: string) => {
     router.push(path);
   };
+
+  // 通知データを取得
+  const fetchNotifications = async () => {
+    if (!session?.user?.id) return;
+    
+    setIsLoadingNotifications(true);
+    try {
+      const response = await fetch('/api/notifications?limit=5');
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data.notifications);
+        setUnreadCount(data.unreadCount);
+      }
+    } catch (error) {
+      console.error('通知取得エラー:', error);
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  };
+
+  // 通知を既読にする
+  const markNotificationAsRead = async (notificationId: string) => {
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notificationId }),
+      });
+      
+      if (response.ok) {
+        setNotifications(prev => 
+          prev.map(n => 
+            n.id === notificationId ? { ...n, isRead: true } : n
+          )
+        );
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('通知更新エラー:', error);
+    }
+  };
+
+  // すべての通知を既読にする
+  const markAllAsRead = async () => {
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ markAllAsRead: true }),
+      });
+      
+      if (response.ok) {
+        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      console.error('通知更新エラー:', error);
+    }
+  };
+
+  // 時間をフォーマット
+  const formatTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return '数分前';
+    if (diffInHours < 24) return `${diffInHours}時間前`;
+    if (diffInHours < 48) return '1日前';
+    return `${Math.floor(diffInHours / 24)}日前`;
+  };
+
+  // セッションが変更されたときに通知を取得
+  useEffect(() => {
+    fetchNotifications();
+  }, [session]);
+
+  // 定期的に通知を取得（30秒ごと）
+  useEffect(() => {
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [session]);
 
   const handleDropdownAction = (key: string) => {
     switch (key) {
@@ -144,45 +253,88 @@ export function Header() {
                         animate={{ scale: [1, 1.2, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
                       >
-                        <Badge
-                          size="sm"
-                          color="danger"
-                          className="absolute -top-1 -right-1"
-                        >
-                          3
-                        </Badge>
+                        {unreadCount > 0 && (
+                          <Badge
+                            size="sm"
+                            color="danger"
+                            className="absolute -top-1 -right-1"
+                          >
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                          </Badge>
+                        )}
                       </motion.div>
                     </Button>
                   </motion.div>
                 </PopoverTrigger>
             <PopoverContent className="w-80">
               <Card className="card-gradient border-0">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <h3 className="font-semibold text-white">通知</h3>
+                  {unreadCount > 0 && (
+                    <Button
+                      size="sm"
+                      variant="light"
+                      className="text-white/80 hover:text-white hover:bg-white/10"
+                      onClick={markAllAsRead}
+                    >
+                      すべて既読
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardBody className="max-h-80 overflow-y-auto">
-                  <div className="space-y-3">
-                    <div className="flex items-start space-x-3 p-2 hover:bg-white/10 rounded-lg cursor-pointer">
-                      <Avatar size="sm" name="田中" className="bg-gradient-to-r from-blue-500 to-purple-500 text-white" />
-                      <div className="flex-1">
-                        <p className="text-sm text-white">
-                          <span className="font-semibold">田中さん</span>があなたに感謝を送りました
-                        </p>
-                        <p className="text-xs text-white/60 mt-1">2時間前</p>
-                      </div>
+                  {isLoadingNotifications ? (
+                    <div className="flex justify-center py-4">
+                      <div className="text-white/60">読み込み中...</div>
                     </div>
-                    <div className="flex items-start space-x-3 p-2 hover:bg-white/10 rounded-lg cursor-pointer">
-                      <Avatar size="sm" name="佐藤" className="bg-gradient-to-r from-green-500 to-blue-500 text-white" />
-                      <div className="flex-1">
-                        <p className="text-sm text-white">
-                          <span className="font-semibold">佐藤さん</span>があなたの投稿にリアクションしました
-                        </p>
-                        <p className="text-xs text-white/60 mt-1">5時間前</p>
-                      </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="text-center py-8 text-white/60">
+                      <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>新しい通知はありません</p>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {notifications.map((notification) => (
+                        <motion.div
+                          key={notification.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`flex items-start space-x-3 p-2 hover:bg-white/10 rounded-lg cursor-pointer transition-colors ${
+                            !notification.isRead ? 'bg-white/5' : ''
+                          }`}
+                          onClick={() => markNotificationAsRead(notification.id)}
+                        >
+                          <Avatar 
+                            size="sm" 
+                            name={notification.sender?.name || 'U'} 
+                            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white flex-shrink-0" 
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white">
+                              <span className="font-semibold">{notification.sender?.name || 'システム'}</span>
+                              {notification.type === 'POST_RECEIVED' && 'から感謝が送られました'}
+                              {notification.type === 'LIKE_RECEIVED' && 'があなたの投稿にグッドしました'}
+                            </p>
+                            <p className="text-xs text-white/60 mt-1 truncate">
+                              {notification.message}
+                            </p>
+                            <div className="flex items-center justify-between mt-1">
+                              <p className="text-xs text-white/50">{formatTimeAgo(notification.createdAt)}</p>
+                              {!notification.isRead && (
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
                   <Divider className="my-4 bg-white/20" />
-                  <Button variant="light" className="text-white hover:bg-white/10" fullWidth>
+                  <Button 
+                    variant="light" 
+                    className="text-white hover:bg-white/10" 
+                    fullWidth
+                    onClick={() => router.push('/notifications')}
+                  >
                     すべての通知を見る
                   </Button>
                 </CardBody>

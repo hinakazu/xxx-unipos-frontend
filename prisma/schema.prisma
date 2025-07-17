@@ -23,6 +23,8 @@ model User {
   receivedPosts Post[]           @relation("PostRecipient")
   likes         Like[]
   transactions  PointTransaction[]
+  notifications Notification[]   @relation("NotificationRecipient")
+  sentNotifications Notification[] @relation("NotificationSender")
 
   @@map("users")
 }
@@ -42,6 +44,7 @@ model Post {
   recipient    User               @relation("PostRecipient", fields: [recipientId], references: [id])
   likes        Like[]
   transactions PointTransaction[]
+  notifications Notification[]
 
   @@map("posts")
 }
@@ -72,4 +75,23 @@ model PointTransaction {
   post Post? @relation(fields: [postId], references: [id])
 
   @@map("point_transactions")
+}
+
+model Notification {
+  id        String @id @default(cuid())
+  type      String // "POST_RECEIVED", "LIKE_RECEIVED", "MENTION"
+  title     String
+  message   String
+  isRead    Boolean @default(false)
+  recipientId String
+  senderId    String?
+  postId      String?
+  createdAt   DateTime @default(now())
+
+  // 関連
+  recipient User  @relation("NotificationRecipient", fields: [recipientId], references: [id])
+  sender    User? @relation("NotificationSender", fields: [senderId], references: [id])
+  post      Post? @relation(fields: [postId], references: [id])
+
+  @@map("notifications")
 }

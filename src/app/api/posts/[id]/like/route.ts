@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { createNotification } from '@/app/api/notifications/route'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,6 +57,11 @@ export async function POST(
       )
     }
 
+    // 山分けロジック: 投稿作成者と感謝を伝えられた人で分配
+    const recipients = [post.authorId, post.recipientId]
+    const uniqueRecipients = [...new Set(recipients)] // 重複を除去（作成者=受信者の場合）
+    const pointPerRecipient = 1 / uniqueRecipients.length
+
     // トランザクションでグッド追加とポイント移動を実行
     const result = await prisma.$transaction(async (tx) => {
       // グッドを作成
@@ -77,11 +83,6 @@ export async function POST(
         where: { id: session.user.id },
         data: { pointsBalance: { decrement: 1 } }
       })
-
-      // 山分けロジック: 投稿作成者と感謝を伝えられた人で分配
-      const recipients = [post.authorId, post.recipientId]
-      const uniqueRecipients = [...new Set(recipients)] // 重複を除去（作成者=受信者の場合）
-      const pointPerRecipient = 1 / uniqueRecipients.length
 
       // 各受信者にポイントを分配
       for (const recipientId of uniqueRecipients) {
@@ -113,6 +114,25 @@ export async function POST(
 
       return { like, goodCount: updatedPost.goodCount }
     })
+
+    // 投稿作成者と受信者に通知を送信
+    const userResponse = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true }
+    })
+
+    for (const recipientId of uniqueRecipients) {
+      if (recipientId !== session.user.id) { // 自分以外に通知
+        await createNotification(
+          recipientId,
+          session.user.id,
+          'LIKE_RECEIVED',
+          'グッドが送られました！',
+          `${userResponse?.name || '誰かさん'}があなたの投稿にグッドを送りました`,
+          postId
+        )
+      }
+    }
 
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
