@@ -56,11 +56,33 @@ export function ProfileInfo() {
     if (!profile) return;
     
     try {
-      // TODO: プロフィール更新API実装
-      console.log('プロフィール更新:', profile);
-      setIsEditing(false);
+      const response = await fetch('/api/users/me', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: profile.name,
+          department: profile.department,
+          position: profile.position,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        setProfile(prevProfile => ({
+          ...prevProfile!,
+          ...updatedUser,
+        }));
+        setIsEditing(false);
+        alert('プロフィールを更新しました！');
+      } else {
+        const error = await response.json();
+        alert('プロフィールの更新に失敗しました: ' + error.error);
+      }
     } catch (error) {
       console.error('プロフィール更新エラー:', error);
+      alert('ネットワークエラーが発生しました');
     }
   };
 

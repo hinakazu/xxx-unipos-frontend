@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { Bell, Search, User, Settings, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -31,9 +32,28 @@ import { EnhancedButton } from '@/components/ui/EnhancedButton';
 export function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
   const { data: session } = useSession();
+  const router = useRouter();
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/auth/signin' });
+  };
+
+  const handleNavigation = (path: string) => {
+    router.push(path);
+  };
+
+  const handleDropdownAction = (key: string) => {
+    switch (key) {
+      case 'profile':
+        router.push('/profile');
+        break;
+      case 'settings':
+        router.push('/settings');
+        break;
+      case 'logout':
+        handleLogout();
+        break;
+    }
   };
 
   return (
@@ -180,29 +200,29 @@ export function Header() {
             >
               <Dropdown>
                 <DropdownTrigger>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button variant="light" className="p-0 min-w-0 gap-2 text-white/80 hover:text-white hover:bg-white/10 backdrop-blur-md">
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                      >
-                        <Avatar size="sm" name={session?.user?.name || "ユーザー"} className="bg-gradient-to-r from-pink-500 to-violet-500 text-white" />
-                      </motion.div>
-                      <span className="hidden md:block text-sm font-medium">{session?.user?.name || "ユーザー"}</span>
-                    </Button>
-                  </motion.div>
+                  <Button variant="light" className="p-0 min-w-0 gap-2 text-white/80 hover:text-white hover:bg-white/10 backdrop-blur-md">
+                    <Avatar size="sm" name={session?.user?.name || "ユーザー"} className="bg-gradient-to-r from-pink-500 to-violet-500 text-white" />
+                    <span className="hidden md:block text-sm font-medium">{session?.user?.name || "ユーザー"}</span>
+                  </Button>
                 </DropdownTrigger>
-            <DropdownMenu>
-              <DropdownItem key="profile" startContent={<User className="w-4 h-4" />}>
-                <Link href="/profile">プロフィール</Link>
+            <DropdownMenu onAction={(key) => handleDropdownAction(key as string)}>
+              <DropdownItem 
+                key="profile" 
+                startContent={<User className="w-4 h-4" />}
+              >
+                プロフィール
               </DropdownItem>
-              <DropdownItem key="settings" startContent={<Settings className="w-4 h-4" />}>
-                <Link href="/settings">設定</Link>
+              <DropdownItem 
+                key="settings" 
+                startContent={<Settings className="w-4 h-4" />}
+              >
+                設定
               </DropdownItem>
-              <DropdownItem key="logout" color="danger" startContent={<LogOut className="w-4 h-4" />} onClick={handleLogout}>
+              <DropdownItem 
+                key="logout" 
+                color="danger" 
+                startContent={<LogOut className="w-4 h-4" />}
+              >
                 ログアウト
               </DropdownItem>
             </DropdownMenu>

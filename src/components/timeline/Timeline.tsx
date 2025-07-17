@@ -108,6 +108,7 @@ interface Post {
   id: string;
   content: string;
   points: number;
+  goodCount: number;
   createdAt: string;
   author: {
     id: string;
@@ -153,15 +154,15 @@ export function Timeline() {
 
   // 投稿データをPostCardで使用する形式に変換
   const transformedPosts = posts.map((post) => ({
-    id: parseInt(post.id),
+    id: post.id,
     author: {
-      id: parseInt(post.author.id),
+      id: post.author.id,
       name: post.author.name || '名前未設定',
       department: post.author.department || '部署未設定',
       avatar: post.author.image,
     },
     recipient: {
-      id: parseInt(post.recipient.id),
+      id: post.recipient.id,
       name: post.recipient.name || '名前未設定',
       department: post.recipient.department || '部署未設定',
       avatar: post.recipient.image,
@@ -169,6 +170,7 @@ export function Timeline() {
     postType: 'gratitude',
     content: post.content,
     points: post.points,
+    goodCount: post.goodCount || 0,
     reactions: [
       { type: 'like', count: post._count.likes || 0 },
     ],

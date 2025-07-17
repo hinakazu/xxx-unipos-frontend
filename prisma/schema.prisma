@@ -31,6 +31,7 @@ model Post {
   id       String   @id @default(cuid())
   content  String
   points   Int
+  goodCount Int     @default(0)
   authorId String
   recipientId String
   createdAt DateTime @default(now())

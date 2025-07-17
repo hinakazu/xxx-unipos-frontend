@@ -6,15 +6,15 @@ import { usePoints } from '@/hooks/usePoints';
 
 interface PostCardProps {
   post: {
-    id: number;
+    id: string;
     author: {
-      id: number;
+      id: string;
       name: string;
       department: string;
       avatar: string | null;
     };
     recipient: {
-      id: number;
+      id: string;
       name: string;
       department: string;
       avatar: string | null;
@@ -22,6 +22,7 @@ interface PostCardProps {
     postType: string;
     content: string;
     points: number;
+    goodCount: number;
     reactions: Array<{
       type: string;
       count: number;
@@ -37,7 +38,8 @@ interface PostCardProps {
 }
 
 export function PostCard({ post }: PostCardProps) {
-  const [goodCount, setGoodCount] = useState(0);
+  const [goodCount, setGoodCount] = useState(post.goodCount);
+  const [isLiking, setIsLiking] = useState(false);
   const { availablePoints, usePoints: consumePoints } = usePoints();
 
   const formatDate = (dateString: string) => {
@@ -78,12 +80,39 @@ export function PostCard({ post }: PostCardProps) {
     }
   };
 
-  const handleGoodClick = () => {
-    if (consumePoints(1)) {
-      setGoodCount(prev => prev + 1);
-      console.log('Good clicked, point sent');
-    } else {
+  const handleGoodClick = async () => {
+    if (isLiking) return;
+    
+    if (!consumePoints(1)) {
       alert('ポイントが不足しています');
+      return;
+    }
+
+    setIsLiking(true);
+    
+    try {
+      const response = await fetch(`/api/posts/${post.id}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setGoodCount(result.goodCount);
+        console.log('Good clicked, point sent');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'エラーが発生しました');
+        // ポイントを元に戻す処理が必要な場合はここに実装
+      }
+    } catch (error) {
+      console.error('Error liking post:', error);
+      alert('エラーが発生しました');
+      // ポイントを元に戻す処理が必要な場合はここに実装
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -124,11 +153,21 @@ export function PostCard({ post }: PostCardProps) {
       </div>
 
       {/* ポイント */}
-      {post.points > 0 && (
+      {(post.points > 0 || goodCount > 0) && (
         <div className="mb-4">
-          <div className="inline-flex items-center space-x-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full px-3 py-1">
-            <Award className="w-4 h-4 text-white" />
-            <span className="text-sm font-medium text-white">{post.points}pt</span>
+          <div className="flex items-center space-x-2">
+            {post.points > 0 && (
+              <div className="inline-flex items-center space-x-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full px-3 py-1">
+                <Award className="w-4 h-4 text-white" />
+                <span className="text-sm font-medium text-white">{post.points}pt</span>
+              </div>
+            )}
+            {goodCount > 0 && (
+              <div className="inline-flex items-center space-x-1 bg-gradient-to-r from-green-400 to-blue-500 rounded-full px-3 py-1">
+                <ThumbsUp className="w-4 h-4 text-white" />
+                <span className="text-sm font-medium text-white">{goodCount}pt</span>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -138,11 +177,13 @@ export function PostCard({ post }: PostCardProps) {
         <div className="flex items-center space-x-4">
           <button 
             onClick={handleGoodClick}
-            disabled={availablePoints < 1}
+            disabled={availablePoints < 1 || isLiking}
             className="flex items-center space-x-1 px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 disabled:bg-gray-500/20 disabled:cursor-not-allowed transition-colors"
           >
             <ThumbsUp className="w-4 h-4 text-white" />
-            <span className="text-sm text-white">グッド {goodCount > 0 && `(${goodCount})`}</span>
+            <span className="text-sm text-white">
+              {isLiking ? 'グッド中...' : `グッド ${goodCount > 0 ? `(${goodCount})` : ''}`}
+            </span>
           </button>
         </div>
       </div>

@@ -48,3 +48,57 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+export async function PUT(request: NextRequest) {
+  try {
+    // 認証確認
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // リクエストボディを取得
+    const body = await request.json()
+    const { name, department, position } = body
+
+    // 入力値検証
+    if (!name || name.trim() === '') {
+      return NextResponse.json(
+        { error: 'Name is required' },
+        { status: 400 }
+      )
+    }
+
+    // ユーザー情報を更新
+    const updatedUser = await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        name: name.trim(),
+        department: department?.trim() || null,
+        position: position?.trim() || null,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        department: true,
+        position: true,
+        pointsBalance: true,
+        createdAt: true,
+      }
+    })
+
+    return NextResponse.json(updatedUser)
+  } catch (error) {
+    console.error('Error updating user:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

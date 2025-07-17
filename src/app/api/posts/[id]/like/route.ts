@@ -25,6 +25,7 @@ export async function POST(
     const post = await prisma.post.findUnique({
       where: { id: postId },
       include: {
+        author: true,
         recipient: true,
       }
     })
@@ -65,17 +66,40 @@ export async function POST(
         }
       })
 
+      // 投稿のgoodCountを増やす
+      const updatedPost = await tx.post.update({
+        where: { id: postId },
+        data: { goodCount: { increment: 1 } }
+      })
+
       // 送信者のポイントを減らす
       await tx.user.update({
         where: { id: session.user.id },
         data: { pointsBalance: { decrement: 1 } }
       })
 
-      // 投稿の受信者のポイントを増やす
-      await tx.user.update({
-        where: { id: post.recipientId },
-        data: { pointsBalance: { increment: 1 } }
-      })
+      // 山分けロジック: 投稿作成者と感謝を伝えられた人で分配
+      const recipients = [post.authorId, post.recipientId]
+      const uniqueRecipients = [...new Set(recipients)] // 重複を除去（作成者=受信者の場合）
+      const pointPerRecipient = 1 / uniqueRecipients.length
+
+      // 各受信者にポイントを分配
+      for (const recipientId of uniqueRecipients) {
+        await tx.user.update({
+          where: { id: recipientId },
+          data: { pointsBalance: { increment: pointPerRecipient } }
+        })
+
+        // ポイント移動履歴を記録（受信）
+        await tx.pointTransaction.create({
+          data: {
+            userId: recipientId,
+            postId,
+            amount: pointPerRecipient,
+            type: 'LIKE_RECEIVE',
+          }
+        })
+      }
 
       // ポイント移動履歴を記録（送信）
       await tx.pointTransaction.create({
@@ -87,17 +111,7 @@ export async function POST(
         }
       })
 
-      // ポイント移動履歴を記録（受信）
-      await tx.pointTransaction.create({
-        data: {
-          userId: post.recipientId,
-          postId,
-          amount: 1,
-          type: 'LIKE_RECEIVE',
-        }
-      })
-
-      return like
+      return { like, goodCount: updatedPost.goodCount }
     })
 
     return NextResponse.json(result, { status: 201 })
