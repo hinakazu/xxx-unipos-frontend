@@ -77,11 +77,12 @@ export function Header() {
               <Button isIconOnly variant="light" className="relative text-white/80 hover:text-white hover:bg-white/10">
                 <Bell className="w-5 h-5" />
                 <Badge
-                  content="3"
                   size="sm"
                   color="danger"
                   className="absolute -top-1 -right-1"
-                />
+                >
+                  3
+                </Badge>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80">

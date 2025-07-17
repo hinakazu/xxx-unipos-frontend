@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Award, ThumbsUp } from 'lucide-react';
+import { Award, ThumbsUp, Heart, Star, Smile } from 'lucide-react';
 import { usePoints } from '@/hooks/usePoints';
 
 interface PostCardProps {

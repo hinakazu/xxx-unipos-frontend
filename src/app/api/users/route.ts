@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 // ユーザー一覧取得（投稿フォームの宛先選択用）
 export async function GET(request: NextRequest) {
   try {

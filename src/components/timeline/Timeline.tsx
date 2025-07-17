@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PostCard } from './PostCard';
 
 // モックデータ
@@ -100,31 +100,97 @@ const mockPosts = [
   },
 ];
 
-export function Timeline() {
-  const [posts] = useState(mockPosts);
-  const [filter, setFilter] = useState('all');
+interface Post {
+  id: string;
+  content: string;
+  points: number;
+  createdAt: string;
+  author: {
+    id: string;
+    name: string;
+    department: string;
+    image: string | null;
+  };
+  recipient: {
+    id: string;
+    name: string;
+    department: string;
+    image: string | null;
+  };
+  likes: any[];
+  _count: {
+    likes: number;
+  };
+}
 
-  const filteredPosts = posts.filter(post => {
-    if (filter === 'all') return true;
-    return post.postType === filter;
-  });
+export function Timeline() {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [filter, setFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 投稿データを取得
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch('/api/posts');
+        if (response.ok) {
+          const postsData = await response.json();
+          setPosts(postsData);
+        }
+      } catch (error) {
+        console.error('投稿データ取得エラー:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  // 投稿データをPostCardで使用する形式に変換
+  const transformedPosts = posts.map((post) => ({
+    id: parseInt(post.id),
+    author: {
+      id: parseInt(post.author.id),
+      name: post.author.name || '名前未設定',
+      department: post.author.department || '部署未設定',
+      avatar: post.author.image,
+    },
+    recipient: {
+      id: parseInt(post.recipient.id),
+      name: post.recipient.name || '名前未設定',
+      department: post.recipient.department || '部署未設定',
+      avatar: post.recipient.image,
+    },
+    postType: 'gratitude',
+    content: post.content,
+    points: post.points,
+    reactions: [
+      { type: 'like', count: post._count.likes || 0 },
+    ],
+    comments: [],
+    createdAt: post.createdAt,
+  }));
 
   return (
     <div className="space-y-6">
 
       {/* 投稿一覧 */}
       <div className="space-y-4">
-        {filteredPosts.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
+        {isLoading ? (
+          <div className="text-center py-12 text-white/60">
+            <p>読み込み中...</p>
+          </div>
+        ) : transformedPosts.length === 0 ? (
+          <div className="text-center py-12 text-white/60">
+            <p>まだ投稿がありません</p>
+          </div>
+        ) : (
+          transformedPosts.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))
+        )}
       </div>
-
-      {/* 読み込み完了メッセージ */}
-      {filteredPosts.length === 0 && (
-        <div className="text-center py-12 text-white/60">
-          <p>まだ投稿がありません</p>
-        </div>
-      )}
     </div>
   );
 }
