@@ -40,6 +40,19 @@ export function PostForm() {
     fetchUsers();
   }, []);
 
+  // ユーザーリストを強制的に更新する関数
+  const refreshUsers = async () => {
+    try {
+      const response = await fetch('/api/users');
+      if (response.ok) {
+        const userData = await response.json();
+        setUsers(userData);
+      }
+    } catch (error) {
+      console.error('ユーザー更新エラー:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);

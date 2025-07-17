@@ -27,6 +27,43 @@ interface UserStats {
   thisMonthReactions: number;
 }
 
+interface RankingData {
+  userRanking: {
+    receivedPoints: number | null;
+    sentPoints: number | null;
+    postCount: number | null;
+  };
+  departmentRanking: Array<{
+    rank: number;
+    department: string;
+    totalPoints: number;
+    memberCount: number;
+  }>;
+  topUsers: {
+    receivedPoints: Array<{
+      rank: number;
+      id: string;
+      name: string;
+      department: string;
+      receivedPoints: number;
+    }>;
+    sentPoints: Array<{
+      rank: number;
+      id: string;
+      name: string;
+      department: string;
+      sentPoints: number;
+    }>;
+    postCount: Array<{
+      rank: number;
+      id: string;
+      name: string;
+      department: string;
+      postCount: number;
+    }>;
+  };
+}
+
 interface Post {
   id: string;
   points: number;
@@ -41,6 +78,7 @@ export function UserStats() {
   const { availablePoints, getTimeUntilReset } = usePoints();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // ユーザーデータと統計を取得
@@ -107,6 +145,13 @@ export function UserStats() {
             thisMonthReactions
           });
         }
+
+        // ランキングデータを取得
+        const statsResponse = await fetch('/api/stats');
+        if (statsResponse.ok) {
+          const stats = await statsResponse.json();
+          setRankingData(stats);
+        }
       } catch (error) {
         console.error('データ取得エラー:', error);
       } finally {
@@ -116,6 +161,25 @@ export function UserStats() {
 
     fetchData();
   }, [session]);
+
+  // セッションが更新されたときにデータを再取得
+  useEffect(() => {
+    if (session?.user?.name) {
+      const fetchData = async () => {
+        try {
+          const userResponse = await fetch('/api/users/me');
+          if (userResponse.ok) {
+            const user = await userResponse.json();
+            setUserData(user);
+          }
+        } catch (error) {
+          console.error('データ更新エラー:', error);
+        }
+      };
+      
+      fetchData();
+    }
+  }, [session?.user?.name]);
   
   return (
     <div className="space-y-6">
@@ -249,7 +313,9 @@ export function UserStats() {
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               <span className="text-sm text-white/80">受け取ったポイント</span>
-              <span className="font-semibold text-blue-400">#5</span>
+              <span className="font-semibold text-blue-400">
+                {rankingData?.userRanking.receivedPoints ? `#${rankingData.userRanking.receivedPoints}` : '---'}
+              </span>
             </motion.div>
             <motion.div 
               className="flex items-center justify-between"
@@ -258,7 +324,9 @@ export function UserStats() {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <span className="text-sm text-white/80">送ったポイント</span>
-              <span className="font-semibold text-green-400">#3</span>
+              <span className="font-semibold text-green-400">
+                {rankingData?.userRanking.sentPoints ? `#${rankingData.userRanking.sentPoints}` : '---'}
+              </span>
             </motion.div>
             <motion.div 
               className="flex items-center justify-between"
@@ -267,7 +335,9 @@ export function UserStats() {
               transition={{ duration: 0.5, delay: 0.3 }}
             >
               <span className="text-sm text-white/80">投稿数</span>
-              <span className="font-semibold text-purple-400">#8</span>
+              <span className="font-semibold text-purple-400">
+                {rankingData?.userRanking.postCount ? `#${rankingData.userRanking.postCount}` : '---'}
+              </span>
             </motion.div>
           </div>
         </div>
@@ -320,42 +390,37 @@ export function UserStats() {
         <div className="p-6">
           <h3 className="font-semibold text-white mb-4">部署ランキング</h3>
           <div className="space-y-3">
-            <motion.div 
-              className="flex items-center space-x-3"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <div className="w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">1</span>
+            {rankingData?.departmentRanking.slice(0, 3).map((dept, index) => {
+              const getRankColor = (rank: number) => {
+                switch (rank) {
+                  case 1: return 'from-yellow-400 to-orange-500';
+                  case 2: return 'from-gray-400 to-gray-500';
+                  case 3: return 'from-orange-400 to-red-500';
+                  default: return 'from-blue-400 to-blue-500';
+                }
+              };
+
+              return (
+                <motion.div 
+                  key={dept.department}
+                  className="flex items-center space-x-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 * (index + 1) }}
+                >
+                  <div className={`w-6 h-6 bg-gradient-to-r ${getRankColor(dept.rank)} rounded-full flex items-center justify-center`}>
+                    <span className="text-white font-bold text-sm">{dept.rank}</span>
+                  </div>
+                  <span className="text-sm text-white/80 flex-1">{dept.department}</span>
+                  <span className="text-sm font-semibold text-white">{dept.totalPoints}pt</span>
+                </motion.div>
+              );
+            })}
+            {!rankingData?.departmentRanking.length && (
+              <div className="text-center py-4 text-white/60">
+                <p className="text-sm">データがありません</p>
               </div>
-              <span className="text-sm text-white/80 flex-1">エンジニアリング</span>
-              <span className="text-sm font-semibold text-white">3,200pt</span>
-            </motion.div>
-            <motion.div 
-              className="flex items-center space-x-3"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <div className="w-6 h-6 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">2</span>
-              </div>
-              <span className="text-sm text-white/80 flex-1">営業</span>
-              <span className="text-sm font-semibold text-white">2,800pt</span>
-            </motion.div>
-            <motion.div 
-              className="flex items-center space-x-3"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <div className="w-6 h-6 bg-gradient-to-r from-orange-400 to-red-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">3</span>
-              </div>
-              <span className="text-sm text-white/80 flex-1">マーケティング</span>
-              <span className="text-sm font-semibold text-white">2,400pt</span>
-            </motion.div>
+            )}
           </div>
         </div>
       </EnhancedCard>

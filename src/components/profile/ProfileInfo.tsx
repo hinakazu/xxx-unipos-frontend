@@ -21,7 +21,7 @@ interface UserProfile {
 }
 
 export function ProfileInfo() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,8 +74,21 @@ export function ProfileInfo() {
           ...prevProfile!,
           ...updatedUser,
         }));
+        
+        // セッションデータを更新
+        await update({
+          ...session,
+          user: {
+            ...session?.user,
+            name: updatedUser.name,
+          },
+        });
+        
         setIsEditing(false);
         alert('プロフィールを更新しました！');
+        
+        // ページをリロードしてすべてのコンポーネントを更新
+        window.location.reload();
       } else {
         const error = await response.json();
         alert('プロフィールの更新に失敗しました: ' + error.error);

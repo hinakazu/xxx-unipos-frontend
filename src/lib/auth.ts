@@ -61,6 +61,27 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string
+        
+        // データベースから最新のユーザー情報を取得
+        try {
+          const user = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              department: true,
+              position: true,
+            }
+          })
+          
+          if (user) {
+            session.user.name = user.name
+            session.user.email = user.email
+          }
+        } catch (error) {
+          console.error('Error fetching user in session:', error)
+        }
       }
       return session
     },

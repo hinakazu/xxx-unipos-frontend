@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Award, ThumbsUp, Heart, Star, Smile } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { usePoints } from '@/hooks/usePoints';
 
 interface PostCardProps {
@@ -163,10 +164,30 @@ export function PostCard({ post }: PostCardProps) {
               </div>
             )}
             {goodCount > 0 && (
-              <div className="inline-flex items-center space-x-1 bg-gradient-to-r from-green-400 to-blue-500 rounded-full px-3 py-1">
-                <ThumbsUp className="w-4 h-4 text-white" />
-                <span className="text-sm font-medium text-white">{goodCount}pt</span>
-              </div>
+              <motion.div 
+                className="inline-flex items-center space-x-1.5 bg-gradient-to-r from-emerald-400 to-blue-500 rounded-full px-3 py-1.5 shadow-lg shadow-emerald-500/25"
+                initial={{ opacity: 0, scale: 0.8, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
+                whileHover={{ scale: 1.1 }}
+              >
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                >
+                  <ThumbsUp className="w-4 h-4 text-white" />
+                </motion.div>
+                <motion.span 
+                  className="text-sm font-medium text-white"
+                  key={goodCount}
+                  initial={{ scale: 1.2 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {goodCount}
+                </motion.span>
+                <span className="text-xs text-white/80 font-medium">グッド</span>
+              </motion.div>
             )}
           </div>
         </div>
@@ -175,16 +196,57 @@ export function PostCard({ post }: PostCardProps) {
       {/* リアクション */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-4">
-          <button 
+          <motion.button 
             onClick={handleGoodClick}
             disabled={availablePoints < 1 || isLiking}
-            className="flex items-center space-x-1 px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 disabled:bg-gray-500/20 disabled:cursor-not-allowed transition-colors"
+            className="group relative flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-emerald-400/30 hover:from-emerald-500/30 hover:to-blue-500/30 hover:border-emerald-400/50 hover:shadow-lg hover:shadow-emerald-500/25 disabled:from-gray-500/10 disabled:to-gray-500/10 disabled:border-gray-500/20 disabled:cursor-not-allowed transition-all duration-300"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
           >
-            <ThumbsUp className="w-4 h-4 text-white" />
-            <span className="text-sm text-white">
-              {isLiking ? 'グッド中...' : `グッド ${goodCount > 0 ? `(${goodCount})` : ''}`}
-            </span>
-          </button>
+            <div className="flex items-center space-x-2">
+              <motion.div 
+                className="relative"
+                animate={isLiking ? { rotate: [0, 15, -15, 0] } : {}}
+                transition={{ duration: 0.6, repeat: isLiking ? Infinity : 0 }}
+              >
+                <ThumbsUp className="w-5 h-5 text-emerald-400 group-hover:text-emerald-300 transition-colors" />
+                {isLiking && (
+                  <motion.div 
+                    className="absolute -inset-1 bg-emerald-400/30 rounded-full"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  />
+                )}
+              </motion.div>
+              <div className="flex flex-col items-start">
+                <span className="text-sm font-medium text-white leading-tight">
+                  {isLiking ? 'グッド中...' : 'グッド'}
+                </span>
+                {goodCount > 0 && (
+                  <motion.div 
+                    className="flex items-center space-x-1"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                    <span className="text-xs text-emerald-300 font-semibold">
+                      {goodCount}
+                    </span>
+                  </motion.div>
+                )}
+              </div>
+            </div>
+            
+            {/* Hover効果 */}
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 to-blue-500/0 group-hover:from-emerald-500/5 group-hover:to-blue-500/5 rounded-xl transition-all duration-300" />
+            
+            {/* グロー効果 */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-xl opacity-0 group-hover:opacity-20 blur transition-all duration-300" />
+          </motion.button>
         </div>
       </div>
 
