@@ -1,69 +1,147 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Award, TrendingUp, Users, Heart, Star, Crown } from 'lucide-react';
 
+interface Badge {
+  id: number;
+  name: string;
+  description: string;
+  icon: any;
+  color: string;
+  earnedAt: string;
+  rarity: string;
+  earned: boolean;
+}
+
+interface UserStats {
+  postCount: number;
+  receivedReactions: number;
+  interactionCount: number;
+  totalPoints: number;
+}
+
 export function ProfileBadges() {
-  const badges = [
+  const { data: session } = useSession();
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  // ユーザー統計を取得
+  useEffect(() => {
+    const fetchUserStats = async () => {
+      if (!session?.user?.id) return;
+      
+      try {
+        const response = await fetch('/api/posts');
+        if (response.ok) {
+          const allPosts = await response.json();
+          
+          // 現在のユーザーに関連する投稿を抽出
+          const userPosts = allPosts.filter((post: any) => 
+            post.author.id === session.user.id || post.recipient.id === session.user.id
+          );
+          
+          // 統計を計算
+          const sentPosts = userPosts.filter((post: any) => post.author.id === session.user.id);
+          const receivedPosts = userPosts.filter((post: any) => post.recipient.id === session.user.id);
+          
+          const totalPoints = receivedPosts.reduce((sum: number, post: any) => sum + post.points, 0);
+          const postCount = sentPosts.length;
+          const receivedReactions = receivedPosts.reduce((sum: number, post: any) => sum + post._count.likes, 0);
+          
+          // 交流した人数（重複を除く）
+          const interactedUsers = new Set([
+            ...sentPosts.map((post: any) => post.recipient.id),
+            ...receivedPosts.map((post: any) => post.author.id)
+          ]);
+          
+          setUserStats({
+            totalPoints,
+            postCount,
+            receivedReactions,
+            interactionCount: interactedUsers.size
+          });
+        }
+      } catch (error) {
+        console.error('統計取得エラー:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserStats();
+  }, [session]);
+
+  // バッジ定義（動的に獲得状況を判定）
+  const badgeDefinitions = [
     {
       id: 1,
       name: '感謝の達人',
-      description: '100回以上の感謝を送信',
+      description: '10回以上の感謝を送信',
       icon: Heart,
       color: 'from-pink-500 to-red-500',
-      earnedAt: '2024-01-15',
       rarity: 'common',
+      condition: (stats: UserStats) => stats.postCount >= 10,
     },
     {
       id: 2,
       name: 'チームワーク',
-      description: '50人以上との交流',
+      description: '5人以上との交流',
       icon: Users,
       color: 'from-green-500 to-blue-500',
-      earnedAt: '2024-01-10',
       rarity: 'common',
+      condition: (stats: UserStats) => stats.interactionCount >= 5,
     },
     {
       id: 3,
       name: '成長株',
-      description: '月間ポイント増加率トップ10',
+      description: '100ポイント以上獲得',
       icon: TrendingUp,
       color: 'from-blue-500 to-purple-500',
-      earnedAt: '2024-01-05',
       rarity: 'rare',
+      condition: (stats: UserStats) => stats.totalPoints >= 100,
     },
     {
       id: 4,
       name: 'スーパースター',
-      description: '月間ランキング1位',
+      description: '50回以上の投稿',
       icon: Star,
       color: 'from-yellow-400 to-orange-500',
-      earnedAt: '2023-12-28',
       rarity: 'epic',
+      condition: (stats: UserStats) => stats.postCount >= 50,
     },
     {
       id: 5,
       name: 'キング',
-      description: '年間ランキング1位',
+      description: '1000ポイント以上獲得',
       icon: Crown,
       color: 'from-purple-500 to-pink-500',
-      earnedAt: '2023-12-31',
       rarity: 'legendary',
+      condition: (stats: UserStats) => stats.totalPoints >= 1000,
     },
   ];
 
+  const badges = badgeDefinitions.map(badge => ({
+    ...badge,
+    earned: userStats ? badge.condition(userStats) : false,
+    earnedAt: new Date().toISOString().split('T')[0], // 実際の実装では獲得日時を保存
+  }));
+
+  const earnedBadges = badges.filter(badge => badge.earned);
+  
   const upcomingBadges = [
     {
       name: 'コミュニケーター',
       description: '200回の投稿',
-      progress: 156,
+      progress: Math.min(userStats?.postCount || 0, 200),
       total: 200,
       icon: Award,
     },
     {
       name: 'インフルエンサー',
-      description: '500回のリアクション獲得',
-      progress: 342,
-      total: 500,
+      description: '100回のリアクション獲得',
+      progress: Math.min(userStats?.receivedReactions || 0, 100),
+      total: 100,
       icon: Star,
     },
   ];
@@ -78,38 +156,58 @@ export function ProfileBadges() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="card-gradient p-6">
+          <div className="text-center py-8 text-white/60">
+            <p>読み込み中...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* 獲得済みバッジ */}
       <div className="card-gradient p-6">
         <h2 className="text-xl font-bold text-white mb-4">獲得バッジ</h2>
-        <div className="grid grid-cols-2 gap-4">
-          {badges.map((badge) => {
-            const Icon = badge.icon;
-            return (
-              <div
-                key={badge.id}
-                className={`p-4 bg-white/5 rounded-lg ring-2 ${getRarityColor(badge.rarity)} relative`}
-              >
-                <div className={`w-12 h-12 bg-gradient-to-r ${badge.color} rounded-full flex items-center justify-center mx-auto mb-3`}>
-                  <Icon className="w-6 h-6 text-white" />
+        {earnedBadges.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4">
+            {earnedBadges.map((badge) => {
+              const Icon = badge.icon;
+              return (
+                <div
+                  key={badge.id}
+                  className={`p-4 bg-white/5 rounded-lg ring-2 ${getRarityColor(badge.rarity)} relative`}
+                >
+                  <div className={`w-12 h-12 bg-gradient-to-r ${badge.color} rounded-full flex items-center justify-center mx-auto mb-3`}>
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-white font-semibold text-sm text-center mb-1">{badge.name}</h3>
+                  <p className="text-white/60 text-xs text-center mb-2">{badge.description}</p>
+                  <div className="text-white/40 text-xs text-center">
+                    {new Date(badge.earnedAt).toLocaleDateString('ja-JP')}
+                  </div>
+                  
+                  {/* レア度インジケーター */}
+                  <div className="absolute top-1 right-1">
+                    <div className={`w-2 h-2 rounded-full ${badge.rarity === 'legendary' ? 'bg-yellow-400' : 
+                      badge.rarity === 'epic' ? 'bg-purple-400' : 
+                      badge.rarity === 'rare' ? 'bg-blue-400' : 'bg-gray-400'}`} />
+                  </div>
                 </div>
-                <h3 className="text-white font-semibold text-sm text-center mb-1">{badge.name}</h3>
-                <p className="text-white/60 text-xs text-center mb-2">{badge.description}</p>
-                <div className="text-white/40 text-xs text-center">
-                  {new Date(badge.earnedAt).toLocaleDateString('ja-JP')}
-                </div>
-                
-                {/* レア度インジケーター */}
-                <div className="absolute top-1 right-1">
-                  <div className={`w-2 h-2 rounded-full ${badge.rarity === 'legendary' ? 'bg-yellow-400' : 
-                    badge.rarity === 'epic' ? 'bg-purple-400' : 
-                    badge.rarity === 'rare' ? 'bg-blue-400' : 'bg-gray-400'}`} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-white/60">
+            <Award className="w-12 h-12 mx-auto mb-4 text-white/40" />
+            <p>まだバッジがありません</p>
+            <p className="text-sm mt-2">活動してバッジを獲得しましょう！</p>
+          </div>
+        )}
       </div>
 
       {/* 進行中のバッジ */}
@@ -150,15 +248,15 @@ export function ProfileBadges() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-white/80">獲得バッジ数</span>
-            <span className="text-white font-semibold">5 / 12</span>
+            <span className="text-white font-semibold">{earnedBadges.length} / {badges.length}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-white/80">レア度の高いバッジ</span>
-            <span className="text-white font-semibold">2</span>
+            <span className="text-white font-semibold">{earnedBadges.filter(b => b.rarity === 'rare' || b.rarity === 'epic' || b.rarity === 'legendary').length}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-white/80">完了率</span>
-            <span className="text-white font-semibold">42%</span>
+            <span className="text-white font-semibold">{Math.round((earnedBadges.length / badges.length) * 100)}%</span>
           </div>
         </div>
       </div>

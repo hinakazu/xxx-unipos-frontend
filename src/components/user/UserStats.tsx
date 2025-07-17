@@ -1,25 +1,73 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Award, TrendingUp, Users, Star } from 'lucide-react';
 import { usePoints } from '@/hooks/usePoints';
 
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  department: string | null;
+  position: string | null;
+  pointsBalance: number;
+}
+
 export function UserStats() {
+  const { data: session } = useSession();
   const { availablePoints, getTimeUntilReset } = usePoints();
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // ユーザーデータを取得
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!session) return;
+      
+      try {
+        const response = await fetch('/api/users/me');
+        if (response.ok) {
+          const user = await response.json();
+          setUserData(user);
+        }
+      } catch (error) {
+        console.error('ユーザーデータ取得エラー:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [session]);
   
   return (
     <div className="space-y-6">
       {/* ユーザー情報 */}
       <div className="card-gradient p-6">
-        <div className="flex items-center space-x-4 mb-4">
-          <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-violet-500 rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-2xl">山</span>
+        {isLoading ? (
+          <div className="text-center py-4 text-white/60">
+            <p>読み込み中...</p>
           </div>
-          <div>
-            <h3 className="font-bold text-lg text-white">山田太郎</h3>
-            <p className="text-sm text-white/80">エンジニアリング</p>
-            <p className="text-sm text-white/80">シニアエンジニア</p>
+        ) : userData ? (
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-violet-500 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-2xl">
+                {userData.name ? userData.name.charAt(0) : 'U'}
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-lg text-white">{userData.name || 'ユーザー名未設定'}</h3>
+              <p className="text-sm text-white/80">{userData.department || '部署未設定'}</p>
+              <p className="text-sm text-white/80">{userData.position || '職位未設定'}</p>
+              <p className="text-xs text-white/60">{userData.email}</p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="text-center py-4 text-white/60">
+            <p>ユーザーデータを取得できませんでした</p>
+          </div>
+        )}
         
         <div className="grid grid-cols-1 gap-4">
           <div className="text-center">

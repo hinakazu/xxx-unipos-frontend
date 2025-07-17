@@ -1,26 +1,85 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Edit3, MapPin, Calendar, Mail, Phone, Building } from 'lucide-react';
 
-export function ProfileInfo() {
-  const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState({
-    name: '山田太郎',
-    displayName: 'Taro Yamada',
-    position: 'シニアエンジニア',
-    department: 'エンジニアリング',
-    email: 'taro.yamada@company.com',
-    phone: '090-1234-5678',
-    joinDate: '2020-04-01',
-    location: '東京, 日本',
-    bio: 'フルスタックエンジニアとして、チームのプロダクト開発をリードしています。新しい技術に挑戦することが好きで、チームメンバーとのコラボレーションを大切にしています。',
-  });
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  department: string | null;
+  position: string | null;
+  createdAt: string;
+  // 拡張プロフィール情報
+  phone?: string;
+  location?: string;
+  bio?: string;
+}
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // TODO: プロフィール更新処理
+export function ProfileInfo() {
+  const { data: session } = useSession();
+  const [isEditing, setIsEditing] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // ユーザープロフィール取得
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!session) return;
+      
+      try {
+        const response = await fetch('/api/users/me');
+        if (response.ok) {
+          const userData = await response.json();
+          setProfile({
+            ...userData,
+            phone: userData.phone || '',
+            location: userData.location || '',
+            bio: userData.bio || '',
+          });
+        }
+      } catch (error) {
+        console.error('プロフィール取得エラー:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [session]);
+
+  const handleSave = async () => {
+    if (!profile) return;
+    
+    try {
+      // TODO: プロフィール更新API実装
+      console.log('プロフィール更新:', profile);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('プロフィール更新エラー:', error);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="card-gradient p-6">
+        <div className="text-center py-8 text-white/60">
+          <p>読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="card-gradient p-6">
+        <div className="text-center py-8 text-white/60">
+          <p>プロフィールを取得できませんでした</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="card-gradient p-6">
@@ -37,7 +96,9 @@ export function ProfileInfo() {
       {/* アバターと基本情報 */}
       <div className="text-center mb-6">
         <div className="w-24 h-24 bg-gradient-to-r from-pink-500 to-violet-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span className="text-white font-bold text-3xl">山</span>
+          <span className="text-white font-bold text-3xl">
+            {profile.name ? profile.name.charAt(0) : 'U'}
+          </span>
         </div>
         
         {isEditing ? (
@@ -47,18 +108,13 @@ export function ProfileInfo() {
               value={profile.name}
               onChange={(e) => setProfile({...profile, name: e.target.value})}
               className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-center"
-            />
-            <input
-              type="text"
-              value={profile.displayName}
-              onChange={(e) => setProfile({...profile, displayName: e.target.value})}
-              className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/80 text-center"
+              placeholder="名前"
             />
           </div>
         ) : (
           <div>
-            <h3 className="text-xl font-bold text-white mb-1">{profile.name}</h3>
-            <p className="text-white/80">{profile.displayName}</p>
+            <h3 className="text-xl font-bold text-white mb-1">{profile.name || 'ユーザー名未設定'}</h3>
+            <p className="text-white/80">{profile.email}</p>
           </div>
         )}
       </div>
@@ -68,32 +124,33 @@ export function ProfileInfo() {
         <div className="flex items-center space-x-3">
           <Building className="w-4 h-4 text-white/60" />
           {isEditing ? (
-            <input
-              type="text"
-              value={profile.position}
-              onChange={(e) => setProfile({...profile, position: e.target.value})}
-              className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-            />
+            <div className="flex-1 space-y-2">
+              <input
+                type="text"
+                value={profile.position || ''}
+                onChange={(e) => setProfile({...profile, position: e.target.value})}
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                placeholder="職位"
+              />
+              <input
+                type="text"
+                value={profile.department || ''}
+                onChange={(e) => setProfile({...profile, department: e.target.value})}
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                placeholder="部署"
+              />
+            </div>
           ) : (
             <div>
-              <span className="text-white">{profile.position}</span>
-              <span className="text-white/60 ml-2">({profile.department})</span>
+              <span className="text-white">{profile.position || '職位未設定'}</span>
+              <span className="text-white/60 ml-2">({profile.department || '部署未設定'})</span>
             </div>
           )}
         </div>
 
         <div className="flex items-center space-x-3">
           <Mail className="w-4 h-4 text-white/60" />
-          {isEditing ? (
-            <input
-              type="email"
-              value={profile.email}
-              onChange={(e) => setProfile({...profile, email: e.target.value})}
-              className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-            />
-          ) : (
-            <span className="text-white">{profile.email}</span>
-          )}
+          <span className="text-white">{profile.email}</span>
         </div>
 
         <div className="flex items-center space-x-3">
@@ -101,12 +158,13 @@ export function ProfileInfo() {
           {isEditing ? (
             <input
               type="tel"
-              value={profile.phone}
+              value={profile.phone || ''}
               onChange={(e) => setProfile({...profile, phone: e.target.value})}
               className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+              placeholder="電話番号"
             />
           ) : (
-            <span className="text-white">{profile.phone}</span>
+            <span className="text-white">{profile.phone || '電話番号未設定'}</span>
           )}
         </div>
 
@@ -115,18 +173,19 @@ export function ProfileInfo() {
           {isEditing ? (
             <input
               type="text"
-              value={profile.location}
+              value={profile.location || ''}
               onChange={(e) => setProfile({...profile, location: e.target.value})}
               className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+              placeholder="所在地"
             />
           ) : (
-            <span className="text-white">{profile.location}</span>
+            <span className="text-white">{profile.location || '所在地未設定'}</span>
           )}
         </div>
 
         <div className="flex items-center space-x-3">
           <Calendar className="w-4 h-4 text-white/60" />
-          <span className="text-white">入社日: {new Date(profile.joinDate).toLocaleDateString('ja-JP')}</span>
+          <span className="text-white">登録日: {new Date(profile.createdAt).toLocaleDateString('ja-JP')}</span>
         </div>
       </div>
 
@@ -135,13 +194,16 @@ export function ProfileInfo() {
         <h4 className="text-white font-semibold mb-2">自己紹介</h4>
         {isEditing ? (
           <textarea
-            value={profile.bio}
+            value={profile.bio || ''}
             onChange={(e) => setProfile({...profile, bio: e.target.value})}
             className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white resize-none"
             rows={4}
+            placeholder="自己紹介を入力してください"
           />
         ) : (
-          <p className="text-white/80 leading-relaxed">{profile.bio}</p>
+          <p className="text-white/80 leading-relaxed">
+            {profile.bio || '自己紹介が設定されていません'}
+          </p>
         )}
       </div>
 

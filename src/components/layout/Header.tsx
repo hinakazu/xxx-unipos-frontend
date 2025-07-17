@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { signOut, useSession } from 'next-auth/react';
 import { Bell, Search, User, Settings, LogOut } from 'lucide-react';
 import {
   Navbar,
@@ -27,6 +28,11 @@ import {
 
 export function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
+  const { data: session } = useSession();
+
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: '/auth/signin' });
+  };
 
   return (
     <Navbar maxWidth="full" className="glass-effect border-none bg-transparent">
@@ -125,18 +131,18 @@ export function Header() {
           <Dropdown>
             <DropdownTrigger>
               <Button variant="light" className="p-0 min-w-0 gap-2 text-white/80 hover:text-white hover:bg-white/10">
-                <Avatar size="sm" name="山田太郎" className="bg-gradient-to-r from-pink-500 to-violet-500 text-white" />
-                <span className="hidden md:block text-sm font-medium">山田太郎</span>
+                <Avatar size="sm" name={session?.user?.name || "ユーザー"} className="bg-gradient-to-r from-pink-500 to-violet-500 text-white" />
+                <span className="hidden md:block text-sm font-medium">{session?.user?.name || "ユーザー"}</span>
               </Button>
             </DropdownTrigger>
             <DropdownMenu>
               <DropdownItem key="profile" startContent={<User className="w-4 h-4" />}>
-                プロフィール
+                <Link href="/profile">プロフィール</Link>
               </DropdownItem>
               <DropdownItem key="settings" startContent={<Settings className="w-4 h-4" />}>
-                設定
+                <Link href="/settings">設定</Link>
               </DropdownItem>
-              <DropdownItem key="logout" color="danger" startContent={<LogOut className="w-4 h-4" />}>
+              <DropdownItem key="logout" color="danger" startContent={<LogOut className="w-4 h-4" />} onClick={handleLogout}>
                 ログアウト
               </DropdownItem>
             </DropdownMenu>

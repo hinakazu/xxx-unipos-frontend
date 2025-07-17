@@ -1,12 +1,79 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Award, TrendingUp, MessageCircle, Heart, Users, Calendar } from 'lucide-react';
 
+interface UserStats {
+  totalPoints: number;
+  postCount: number;
+  receivedReactions: number;
+  interactionCount: number;
+}
+
+interface Post {
+  id: string;
+  points: number;
+  createdAt: string;
+  author: { id: string; name: string; };
+  recipient: { id: string; name: string; };
+  _count: { likes: number; };
+}
+
 export function ProfileStats() {
+  const { data: session } = useSession();
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  // ユーザー統計を取得
+  useEffect(() => {
+    const fetchUserStats = async () => {
+      if (!session?.user?.id) return;
+      
+      try {
+        const response = await fetch('/api/posts');
+        if (response.ok) {
+          const allPosts: Post[] = await response.json();
+          
+          // 現在のユーザーに関連する投稿を抽出
+          const userPosts = allPosts.filter(post => 
+            post.author.id === session.user.id || post.recipient.id === session.user.id
+          );
+          
+          // 統計を計算
+          const sentPosts = userPosts.filter(post => post.author.id === session.user.id);
+          const receivedPosts = userPosts.filter(post => post.recipient.id === session.user.id);
+          
+          const totalPoints = receivedPosts.reduce((sum, post) => sum + post.points, 0);
+          const postCount = sentPosts.length;
+          const receivedReactions = receivedPosts.reduce((sum, post) => sum + post._count.likes, 0);
+          
+          // 交流した人数（重複を除く）
+          const interactedUsers = new Set([
+            ...sentPosts.map(post => post.recipient.id),
+            ...receivedPosts.map(post => post.author.id)
+          ]);
+          
+          setUserStats({
+            totalPoints,
+            postCount,
+            receivedReactions,
+            interactionCount: interactedUsers.size
+          });
+        }
+      } catch (error) {
+        console.error('統計取得エラー:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserStats();
+  }, [session]);
+
   const stats = [
     {
       label: '総獲得ポイント',
-      value: '12,450',
+      value: userStats?.totalPoints?.toLocaleString() || '0',
       change: '+15.2%',
       trend: 'up',
       icon: Award,
@@ -14,7 +81,7 @@ export function ProfileStats() {
     },
     {
       label: '投稿数',
-      value: '156',
+      value: userStats?.postCount?.toString() || '0',
       change: '+8.7%',
       trend: 'up',
       icon: MessageCircle,
@@ -22,7 +89,7 @@ export function ProfileStats() {
     },
     {
       label: '受けたリアクション',
-      value: '1,234',
+      value: userStats?.receivedReactions?.toString() || '0',
       change: '+12.3%',
       trend: 'up',
       icon: Heart,
@@ -30,7 +97,7 @@ export function ProfileStats() {
     },
     {
       label: '交流した人数',
-      value: '89',
+      value: userStats?.interactionCount?.toString() || '0',
       change: '+5.4%',
       trend: 'up',
       icon: Users,
@@ -70,6 +137,22 @@ export function ProfileStats() {
       color: 'from-green-500 to-blue-500',
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, index) => (
+            <div key={index} className="card-gradient p-6">
+              <div className="text-center py-8 text-white/60">
+                <p>読み込み中...</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

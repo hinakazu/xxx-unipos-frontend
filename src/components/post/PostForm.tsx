@@ -41,41 +41,36 @@ export function PostForm() {
     e.preventDefault();
     setIsLoading(true);
     
-    // ポイントを使用
-    if (consumePoints(points)) {
-      try {
-        const response = await fetch('/api/posts', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            content,
-            recipientId: selectedUser,
-            points,
-          }),
-        });
+    try {
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content,
+          recipientId: selectedUser,
+          points,
+        }),
+      });
 
-        if (response.ok) {
-          const result = await response.json();
-          console.log('投稿成功:', result);
-          setContent('');
-          setSelectedUser('');
-          setPoints(100);
-          alert('投稿しました！');
-          // ページをリロードしてタイムラインを更新
-          window.location.reload();
-        } else {
-          const error = await response.json();
-          console.error('投稿エラー:', error);
-          alert('投稿に失敗しました: ' + error.error);
-        }
-      } catch (error) {
-        console.error('ネットワークエラー:', error);
-        alert('ネットワークエラーが発生しました');
+      if (response.ok) {
+        const result = await response.json();
+        console.log('投稿成功:', result);
+        setContent('');
+        setSelectedUser('');
+        setPoints(100);
+        alert('投稿しました！');
+        // ページをリロードしてタイムラインを更新
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        console.error('投稿エラー:', error);
+        alert('投稿に失敗しました: ' + error.error);
       }
-    } else {
-      alert('ポイントが不足しています');
+    } catch (error) {
+      console.error('ネットワークエラー:', error);
+      alert('ネットワークエラーが発生しました');
     }
     
     setIsLoading(false);
@@ -145,7 +140,7 @@ export function PostForm() {
         <div className="flex items-center justify-end">
           <button
             type="submit"
-            disabled={!content || !selectedUser || availablePoints < points || isLoading}
+            disabled={!content || !selectedUser || isLoading}
             className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-pink-500 to-violet-500 text-white rounded-lg hover:from-pink-600 hover:to-violet-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
           >
             <Send className="w-4 h-4" />
