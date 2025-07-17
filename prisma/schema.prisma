@@ -66,7 +66,7 @@ model PointTransaction {
   id     String @id @default(cuid())
   userId String
   postId String?
-  amount Int
+  amount Float
   type   String // "POST_SEND", "POST_RECEIVE", "LIKE_SEND", "LIKE_RECEIVE", "WEEKLY_ALLOCATION", "WEEKLY_RESET"
   createdAt DateTime @default(now())
 

@@ -116,22 +116,26 @@ export async function POST(
     })
 
     // 投稿作成者と受信者に通知を送信
-    const userResponse = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { name: true }
-    })
+    try {
+      const userResponse = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { name: true }
+      })
 
-    for (const recipientId of uniqueRecipients) {
-      if (recipientId !== session.user.id) { // 自分以外に通知
-        await createNotification(
-          recipientId,
-          session.user.id,
-          'LIKE_RECEIVED',
-          'グッドが送られました！',
-          `${userResponse?.name || '誰かさん'}があなたの投稿にグッドを送りました`,
-          postId
-        )
+      for (const recipientId of uniqueRecipients) {
+        if (recipientId !== session.user.id) { // 自分以外に通知
+          await createNotification(
+            recipientId,
+            session.user.id,
+            'LIKE_RECEIVED',
+            'グッドが送られました！',
+            `${userResponse?.name || '誰かさん'}があなたの投稿にグッドを送りました`,
+            postId
+          )
+        }
       }
+    } catch (notificationError) {
+      console.error('通知作成エラー:', notificationError)
     }
 
     return NextResponse.json(result, { status: 201 })

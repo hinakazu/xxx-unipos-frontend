@@ -198,15 +198,19 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      // 通知を作成
-      await createNotification(
-        recipientId,
-        session.user.id,
-        'POST_RECEIVED',
-        '新しい感謝が届きました！',
-        `${sender.name || '誰かさん'}からあなたに${points}ポイントの感謝が送られました`,
-        post.id
-      )
+      // 通知を作成（エラーが発生しても投稿は完了させる）
+      try {
+        await createNotification(
+          recipientId,
+          session.user.id,
+          'POST_RECEIVED',
+          '新しい感謝が届きました！',
+          `${sender.name || '誰かさん'}からあなたに${points}ポイントの感謝が送られました`,
+          post.id
+        )
+      } catch (notificationError) {
+        console.error('通知作成エラー:', notificationError)
+      }
 
       return post
     })

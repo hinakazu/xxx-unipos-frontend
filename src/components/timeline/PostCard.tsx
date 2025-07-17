@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Award, ThumbsUp, Heart, Star, Smile } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePoints } from '@/hooks/usePoints';
+import { triggerRefresh } from '@/hooks/useRefresh';
 
 interface PostCardProps {
   post: {
@@ -103,6 +104,8 @@ export function PostCard({ post }: PostCardProps) {
         const result = await response.json();
         setGoodCount(result.goodCount);
         console.log('Good clicked, point sent');
+        // 統計を更新
+        triggerRefresh();
       } else {
         const error = await response.json();
         alert(error.error || 'エラーが発生しました');

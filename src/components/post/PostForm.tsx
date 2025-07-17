@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePoints } from '@/hooks/usePoints';
+import { triggerRefresh } from '@/hooks/useRefresh';
 import { EnhancedCard } from '@/components/ui/EnhancedCard';
 import { EnhancedButton } from '@/components/ui/EnhancedButton';
 
@@ -77,6 +78,8 @@ export function PostForm() {
         setSelectedUser('');
         setPoints(50);
         alert('投稿しました！');
+        // 統計とタイムラインを更新
+        triggerRefresh();
         // ページをリロードしてタイムラインを更新
         window.location.reload();
       } else {

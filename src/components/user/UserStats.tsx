@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { Award, TrendingUp, Users, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePoints } from '@/hooks/usePoints';
+import { useRefresh } from '@/hooks/useRefresh';
 import { EnhancedCard } from '@/components/ui/EnhancedCard';
 
 interface UserData {
@@ -82,85 +83,115 @@ export function UserStats() {
   const [isLoading, setIsLoading] = useState(true);
 
   // ユーザーデータと統計を取得
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!session?.user?.id) return;
-      
-      try {
-        // ユーザーデータを取得
-        const userResponse = await fetch('/api/users/me');
-        if (userResponse.ok) {
-          const user = await userResponse.json();
-          setUserData(user);
-        }
-
-        // 投稿データを取得して統計を計算
-        const postsResponse = await fetch('/api/posts');
-        if (postsResponse.ok) {
-          const allPosts: Post[] = await postsResponse.json();
-          
-          // 現在のユーザーに関連する投稿を抽出
-          const userPosts = allPosts.filter(post => 
-            post.author.id === session.user.id || post.recipient.id === session.user.id
-          );
-          
-          const sentPosts = allPosts.filter(post => post.author.id === session.user.id);
-          const receivedPosts = allPosts.filter(post => post.recipient.id === session.user.id);
-          
-          // 今月の開始日を取得
-          const now = new Date();
-          const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-          
-          // 統計を計算
-          const totalReceivedPoints = receivedPosts.reduce((sum, post) => sum + post.points, 0);
-          const totalSentPoints = sentPosts.reduce((sum, post) => sum + post.points, 0);
-          const postCount = sentPosts.length;
-          const reactionCount = receivedPosts.reduce((sum, post) => sum + post._count.likes, 0);
-          
-          // 今月の統計
-          const thisMonthReceived = receivedPosts
-            .filter(post => new Date(post.createdAt) >= thisMonthStart)
-            .reduce((sum, post) => sum + post.points, 0);
-          
-          const thisMonthSent = sentPosts
-            .filter(post => new Date(post.createdAt) >= thisMonthStart)
-            .reduce((sum, post) => sum + post.points, 0);
-          
-          const thisMonthPosts = sentPosts
-            .filter(post => new Date(post.createdAt) >= thisMonthStart)
-            .length;
-          
-          const thisMonthReactions = receivedPosts
-            .filter(post => new Date(post.createdAt) >= thisMonthStart)
-            .reduce((sum, post) => sum + post._count.likes, 0);
-          
-          setUserStats({
-            totalReceivedPoints,
-            totalSentPoints,
-            postCount,
-            reactionCount,
-            thisMonthReceived,
-            thisMonthSent,
-            thisMonthPosts,
-            thisMonthReactions
-          });
-        }
-
-        // ランキングデータを取得
-        const statsResponse = await fetch('/api/stats');
-        if (statsResponse.ok) {
-          const stats = await statsResponse.json();
-          setRankingData(stats);
-        }
-      } catch (error) {
-        console.error('データ取得エラー:', error);
-      } finally {
-        setIsLoading(false);
+  const fetchData = async () => {
+    if (!session?.user?.id) return;
+    
+    try {
+      // ユーザーデータを取得
+      const userResponse = await fetch('/api/users/me');
+      if (userResponse.ok) {
+        const user = await userResponse.json();
+        setUserData(user);
       }
-    };
 
+      // 投稿データを取得して統計を計算
+      const postsResponse = await fetch('/api/posts');
+      const allPosts: Post[] = postsResponse.ok ? await postsResponse.json() : [];
+      
+      // ポイント取引履歴を取得
+      const transactionsResponse = await fetch('/api/transactions');
+      const allTransactions = transactionsResponse.ok ? await transactionsResponse.json() : [];
+      
+      if (postsResponse.ok) {
+        const sentPosts = allPosts.filter(post => post.author.id === session.user.id);
+        const receivedPosts = allPosts.filter(post => post.recipient.id === session.user.id);
+        
+        // 今月の開始日を取得
+        const now = new Date();
+        const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        // ポイント取引履歴から受け取ったポイントを計算
+        const receivedTransactions = allTransactions.filter((t: any) => 
+          t.userId === session.user.id && (t.type === 'POST_RECEIVE' || t.type === 'LIKE_RECEIVE')
+        );
+        
+        const sentTransactions = allTransactions.filter((t: any) => 
+          t.userId === session.user.id && (t.type === 'POST_SEND' || t.type === 'LIKE_SEND')
+        );
+        
+        // デバッグログ
+        console.log('受け取った取引:', receivedTransactions);
+        console.log('送った取引:', sentTransactions);
+        
+        // 統計を計算（ポイント取引履歴ベース）
+        const totalReceivedPoints = Math.round(receivedTransactions.reduce((sum: number, t: any) => sum + t.amount, 0) * 10) / 10;
+        const totalSentPoints = Math.round(Math.abs(sentTransactions.reduce((sum: number, t: any) => sum + t.amount, 0)) * 10) / 10;
+        const postCount = sentPosts.length;
+        const reactionCount = receivedPosts.reduce((sum, post) => sum + post._count.likes, 0);
+        
+        // 今月の統計
+        const thisMonthReceivedTransactions = receivedTransactions.filter((t: any) => 
+          new Date(t.createdAt) >= thisMonthStart
+        );
+        const thisMonthSentTransactions = sentTransactions.filter((t: any) => 
+          new Date(t.createdAt) >= thisMonthStart
+        );
+        
+        const thisMonthReceived = Math.round(thisMonthReceivedTransactions.reduce((sum: number, t: any) => sum + t.amount, 0) * 10) / 10;
+        const thisMonthSent = Math.round(Math.abs(thisMonthSentTransactions.reduce((sum: number, t: any) => sum + t.amount, 0)) * 10) / 10;
+        
+        console.log('今月受け取った取引:', thisMonthReceivedTransactions);
+        console.log('今月の受け取りポイント:', thisMonthReceived);
+        console.log('累積受け取りポイント:', totalReceivedPoints);
+        
+        const thisMonthPosts = sentPosts
+          .filter(post => new Date(post.createdAt) >= thisMonthStart)
+          .length;
+        
+        const thisMonthReactions = receivedPosts
+          .filter(post => new Date(post.createdAt) >= thisMonthStart)
+          .reduce((sum, post) => sum + post._count.likes, 0);
+        
+        setUserStats({
+          totalReceivedPoints,
+          totalSentPoints,
+          postCount,
+          reactionCount,
+          thisMonthReceived,
+          thisMonthSent,
+          thisMonthPosts,
+          thisMonthReactions
+        });
+      }
+
+      // ランキングデータを取得
+      const statsResponse = await fetch('/api/stats');
+      if (statsResponse.ok) {
+        const stats = await statsResponse.json();
+        setRankingData(stats);
+      }
+    } catch (error) {
+      console.error('データ取得エラー:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ユーザーデータと統計を取得
+  useEffect(() => {
     fetchData();
   }, [session]);
+
+  // 定期的にデータを更新（30秒ごと）
+  useEffect(() => {
+    if (session?.user?.id) {
+      const interval = setInterval(fetchData, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [session]);
+
+  // リフレッシュイベントを監視
+  useRefresh(fetchData);
 
   // セッションが更新されたときにデータを再取得
   useEffect(() => {
