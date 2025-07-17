@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String?
+  email         String   @unique
+  image         String?
+  department    String?
+  position      String?
+  pointsBalance Int      @default(400)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 関連
+  authoredPosts Post[]           @relation("PostAuthor")
+  receivedPosts Post[]           @relation("PostRecipient")
+  likes         Like[]
+  transactions  PointTransaction[]
+
+  @@map("users")
+}
+
+model Post {
+  id       String   @id @default(cuid())
+  content  String
+  points   Int
+  authorId String
+  recipientId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 関連
+  author       User               @relation("PostAuthor", fields: [authorId], references: [id])
+  recipient    User               @relation("PostRecipient", fields: [recipientId], references: [id])
+  likes        Like[]
+  transactions PointTransaction[]
+
+  @@map("posts")
+}
+
+model Like {
+  id     String @id @default(cuid())
+  postId String
+  userId String
+  createdAt DateTime @default(now())
+
+  // 関連
+  post Post @relation(fields: [postId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("likes")
+}
+
+model PointTransaction {
+  id     String @id @default(cuid())
+  userId String
+  postId String?
+  amount Int
+  type   String // "POST_SEND", "POST_RECEIVE", "LIKE_SEND", "LIKE_RECEIVE", "WEEKLY_ALLOCATION", "WEEKLY_RESET"
+  createdAt DateTime @default(now())
+
+  // 関連
+  user User  @relation(fields: [userId], references: [id])
+  post Post? @relation(fields: [postId], references: [id])
+
+  @@map("point_transactions")
+}
