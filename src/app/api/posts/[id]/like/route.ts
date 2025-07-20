@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { createNotification } from '@/app/api/notifications/route'
+import { createNotification } from '@/lib/notifications'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,7 +59,7 @@ export async function POST(
 
     // 山分けロジック: 投稿作成者と感謝を伝えられた人で分配
     const recipients = [post.authorId, post.recipientId]
-    const uniqueRecipients = [...new Set(recipients)] // 重複を除去（作成者=受信者の場合）
+    const uniqueRecipients = Array.from(new Set(recipients)) // 重複を除去（作成者=受信者の場合）
     const pointPerRecipient = 1 / uniqueRecipients.length
 
     // トランザクションでグッド追加とポイント移動を実行

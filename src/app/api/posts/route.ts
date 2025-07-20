@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { createNotification } from '@/app/api/notifications/route'
+import { createNotification } from '@/lib/notifications'
 
 export const dynamic = 'force-dynamic'
 
