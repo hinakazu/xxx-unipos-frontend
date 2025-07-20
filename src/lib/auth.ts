@@ -1,9 +1,14 @@
 import { NextAuthOptions } from 'next-auth'
 import { prisma } from './prisma'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import GoogleProvider from 'next-auth/providers/google'
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -52,6 +57,40 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
   callbacks: {
+    async signIn({ user, account, profile }) {
+      // GoogleプロバイダーでのサインインとCredentialsプロバイダーでのサインインを処理
+      if (account?.provider === 'google') {
+        try {
+          // GoogleからサインインしたユーザーをDBで検索または作成
+          let dbUser = await prisma.user.findUnique({
+            where: { email: user.email! }
+          })
+
+          if (!dbUser) {
+            // 新しいユーザーを作成
+            dbUser = await prisma.user.create({
+              data: {
+                email: user.email!,
+                name: user.name || user.email!.split('@')[0],
+                image: user.image,
+                pointsBalance: 400,
+              }
+            })
+            console.log('New Google user created:', dbUser.id)
+          }
+
+          // user.idを更新してjwtコールバックで使用できるようにする
+          user.id = dbUser.id
+          return true
+        } catch (error) {
+          console.error('Error handling Google sign in:', error)
+          return false
+        }
+      }
+      
+      // Credentialsプロバイダーの場合は既存の処理をそのまま使用
+      return true
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
@@ -72,12 +111,14 @@ export const authOptions: NextAuthOptions = {
               email: true,
               department: true,
               position: true,
+              image: true,
             }
           })
           
           if (user) {
             session.user.name = user.name
             session.user.email = user.email
+            session.user.image = user.image
           }
         } catch (error) {
           console.error('Error fetching user in session:', error)

@@ -3,6 +3,15 @@
     {
       "path": "/api/cron/reset-points",
       "schedule": "0 0 * * 1"
+    },
+    {
+      "path": "/api/cron/delete-old-notifications",
+      "schedule": "0 2 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "app/api/**": {
+      "maxDuration": 30
+    }
+  }
 }
