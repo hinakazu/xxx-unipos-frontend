@@ -215,8 +215,7 @@ export function UserStats() {
   return (
     <div className="space-y-6">
       {/* ユーザー情報 */}
-      <EnhancedCard variant="gradient" animated={true} glowEffect={true}>
-        <div className="p-6">
+      <div className="card-gradient p-6 backdrop-blur-xl">
           {isLoading ? (
             <div className="text-center py-4 text-foreground/60">
               <p>読み込み中...</p>
@@ -272,12 +271,10 @@ export function UserStats() {
               </div>
             </motion.div>
           </div>
-        </div>
-      </EnhancedCard>
+      </div>
 
       {/* 今月の統計 */}
-      <EnhancedCard variant="glass" animated={true} hoverable={true}>
-        <div className="p-6">
+      <div className="card-gradient p-6 backdrop-blur-xl">
           <h3 className="font-semibold text-foreground mb-4">今月の統計</h3>
           <div className="space-y-4">
             <motion.div 
@@ -329,12 +326,10 @@ export function UserStats() {
               <span className="font-semibold text-foreground">{userStats?.thisMonthReactions || 0}</span>
             </motion.div>
           </div>
-        </div>
-      </EnhancedCard>
+      </div>
 
       {/* ランキング */}
-      <EnhancedCard variant="neon" animated={true} hoverable={true}>
-        <div className="p-6">
+      <div className="card-gradient p-6 backdrop-blur-xl">
           <h3 className="font-semibold text-foreground mb-4">今月のランキング</h3>
           <div className="space-y-3">
             <motion.div 
@@ -371,12 +366,10 @@ export function UserStats() {
               </span>
             </motion.div>
           </div>
-        </div>
-      </EnhancedCard>
+      </div>
 
       {/* 最近のバッジ */}
-      <EnhancedCard variant="gradient" animated={true} hoverable={true}>
-        <div className="p-6">
+      <div className="card-gradient p-6 backdrop-blur-xl">
           <h3 className="font-semibold text-foreground mb-4">最近のバッジ</h3>
           <div className="grid grid-cols-3 gap-3">
             <motion.div 
@@ -413,12 +406,10 @@ export function UserStats() {
               <span className="text-xs text-foreground/80">チームワーク</span>
             </motion.div>
           </div>
-        </div>
-      </EnhancedCard>
+      </div>
 
       {/* 部署ランキング */}
-      <EnhancedCard variant="glass" animated={true} hoverable={true}>
-        <div className="p-6">
+      <div className="card-gradient p-6 backdrop-blur-xl">
           <h3 className="font-semibold text-foreground mb-4">部署ランキング</h3>
           <div className="space-y-3">
             {rankingData?.departmentRanking.slice(0, 3).map((dept, index) => {
@@ -453,8 +444,7 @@ export function UserStats() {
               </div>
             )}
           </div>
-        </div>
-      </EnhancedCard>
+      </div>
     </div>
   );
 }

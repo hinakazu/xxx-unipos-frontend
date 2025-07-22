@@ -96,7 +96,7 @@ export function PostForm() {
   };
 
   return (
-    <EnhancedCard variant="glass" animated={true} glowEffect={true}>
+    <div className="card-gradient p-6 backdrop-blur-xl">
       <motion.form 
         onSubmit={handleSubmit} 
         className="space-y-4"
@@ -207,10 +207,10 @@ export function PostForm() {
             glowEffect={true}
             rippleEffect={true}
           >
-            {isLoading ? '投稿中...' : availablePoints < points ? 'ポイント不足' : 'テストテスト'}
+            {isLoading ? '投稿中...' : availablePoints < points ? 'ポイント不足' : '投稿する'}
           </EnhancedButton>
         </motion.div>
       </motion.form>
-    </EnhancedCard>
+    </div>
   );
 }
