@@ -17,7 +17,7 @@ module.exports = {
       light: {
         colors: {
           background: "rgba(0, 0, 0, 0.05)",
-          foreground: "#1F2937",
+          foreground: "#FFFFFF",
           default: {
             50: "rgba(148, 163, 184, 0.1)",
             100: "rgba(148, 163, 184, 0.2)",
@@ -26,7 +26,7 @@ module.exports = {
             400: "rgba(148, 163, 184, 0.5)",
             500: "rgba(148, 163, 184, 0.6)",
             DEFAULT: "rgba(148, 163, 184, 0.2)",
-            foreground: "#1F2937",
+            foreground: "#FFFFFF",
           },
           primary: {
             50: "#e6f1fe",
@@ -40,7 +40,7 @@ module.exports = {
             800: "#002e62",
             900: "#001731",
             DEFAULT: "#006FEE",
-            foreground: "#1F2937",
+            foreground: "#FFFFFF",
           },
           focus: "#006FEE",
         },
