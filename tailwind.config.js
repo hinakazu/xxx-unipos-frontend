@@ -16,17 +16,17 @@ module.exports = {
     themes: {
       light: {
         colors: {
-          background: "rgba(255, 255, 255, 0.1)",
-          foreground: "#11181C",
+          background: "rgba(0, 0, 0, 0.05)",
+          foreground: "#FFFFFF",
           default: {
-            50: "rgba(255, 255, 255, 0.05)",
-            100: "rgba(255, 255, 255, 0.1)",
-            200: "rgba(255, 255, 255, 0.2)",
-            300: "rgba(255, 255, 255, 0.3)",
-            400: "rgba(255, 255, 255, 0.4)",
-            500: "rgba(255, 255, 255, 0.5)",
-            DEFAULT: "rgba(255, 255, 255, 0.1)",
-            foreground: "#11181C",
+            50: "rgba(148, 163, 184, 0.1)",
+            100: "rgba(148, 163, 184, 0.2)",
+            200: "rgba(148, 163, 184, 0.3)",
+            300: "rgba(148, 163, 184, 0.4)",
+            400: "rgba(148, 163, 184, 0.5)",
+            500: "rgba(148, 163, 184, 0.6)",
+            DEFAULT: "rgba(148, 163, 184, 0.2)",
+            foreground: "#FFFFFF",
           },
           primary: {
             50: "#e6f1fe",
