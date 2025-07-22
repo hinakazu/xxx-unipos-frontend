@@ -207,7 +207,7 @@ export function PostForm() {
             glowEffect={true}
             rippleEffect={true}
           >
-            {isLoading ? '投稿中...' : availablePoints < points ? 'ポイント不足' : '投稿する'}
+            {isLoading ? '投稿中...' : availablePoints < points ? 'ポイント不足' : 'テストテスト'}
           </EnhancedButton>
         </motion.div>
       </motion.form>
