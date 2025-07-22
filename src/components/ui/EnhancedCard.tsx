@@ -26,15 +26,15 @@ export function EnhancedCard({
   const getVariantClasses = () => {
     switch (variant) {
       case 'glass':
-        return 'bg-white/20 backdrop-blur-xl border-white/30';
+        return 'bg-default-100/20 backdrop-blur-xl border-default-200/30';
       case 'gradient':
-        return 'bg-gradient-to-br from-white/25 to-white/10 backdrop-blur-xl border-white/30';
+        return 'bg-gradient-to-br from-default-100/25 to-default-100/10 backdrop-blur-xl border-default-200/30';
       case 'neon':
         return 'bg-gradient-to-br from-purple-500/25 to-pink-500/25 border-purple-500/40 backdrop-blur-xl';
       case 'cosmic':
         return 'bg-gradient-to-br from-blue-500/25 to-cyan-500/25 border-cyan-500/40 backdrop-blur-xl';
       default:
-        return 'bg-gradient-to-br from-white/25 to-white/10 backdrop-blur-xl border-white/30';
+        return 'bg-gradient-to-br from-default-100/25 to-default-100/10 backdrop-blur-xl border-default-200/30';
     }
   };
 
