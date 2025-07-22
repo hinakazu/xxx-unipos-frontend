@@ -68,14 +68,14 @@ export function usePoints() {
     if (now.getDay() === 1 && now >= lastMonday) {
       const storedResetDate = localStorage.getItem(userStorageKey);
       if (!storedResetDate || new Date(storedResetDate) < lastMonday) {
-        // ポイントをリセット
+        // ポイントをリセット（毎週400ポイント固定付与）
         setPointsData({
-          availablePoints: userPoints || 400,
+          availablePoints: 400,
           lastResetDate: lastMonday,
           nextResetDate: nextMonday,
         });
         localStorage.setItem(userStorageKey, lastMonday.toISOString());
-        localStorage.setItem(userPointsKey, (userPoints || 400).toString());
+        localStorage.setItem(userPointsKey, '400');
         return;
       }
     }
@@ -85,7 +85,7 @@ export function usePoints() {
     const storedResetDate = localStorage.getItem(userStorageKey);
     
     setPointsData({
-      availablePoints: storedPoints ? parseInt(storedPoints) : (userPoints || 400),
+      availablePoints: storedPoints ? parseInt(storedPoints) : 400,
       lastResetDate: storedResetDate ? new Date(storedResetDate) : lastMonday,
       nextResetDate: nextMonday,
     });
