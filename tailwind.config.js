@@ -16,8 +16,18 @@ module.exports = {
     themes: {
       light: {
         colors: {
-          background: "#FFFFFF",
+          background: "rgba(255, 255, 255, 0.1)",
           foreground: "#11181C",
+          default: {
+            50: "rgba(255, 255, 255, 0.05)",
+            100: "rgba(255, 255, 255, 0.1)",
+            200: "rgba(255, 255, 255, 0.2)",
+            300: "rgba(255, 255, 255, 0.3)",
+            400: "rgba(255, 255, 255, 0.4)",
+            500: "rgba(255, 255, 255, 0.5)",
+            DEFAULT: "rgba(255, 255, 255, 0.1)",
+            foreground: "#11181C",
+          },
           primary: {
             50: "#e6f1fe",
             100: "#cce3fd",

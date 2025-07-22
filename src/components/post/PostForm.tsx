@@ -112,11 +112,11 @@ export function PostForm() {
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
         >
-          <label className="text-sm font-medium text-white">宛先:</label>
+          <label className="text-sm font-medium text-foreground">宛先:</label>
           <motion.select
             value={selectedUser}
             onChange={(e) => setSelectedUser(e.target.value)}
-            className="flex-1 px-3 py-2 bg-white/20 border border-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-white backdrop-blur-md transition-all duration-300 shadow-lg"
+            className="flex-1 px-3 py-2 bg-default-200 border border-default-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-foreground backdrop-blur-md transition-all duration-300 shadow-lg"
             required
             whileFocus={{ scale: 1.02 }}
           >
@@ -139,7 +139,7 @@ export function PostForm() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="感謝の気持ちを込めてメッセージを書いてください..."
-            className="w-full px-4 py-3 bg-white/20 border border-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 resize-none text-white placeholder:text-white/70 backdrop-blur-md transition-all duration-300 shadow-lg"
+            className="w-full px-4 py-3 bg-default-200 border border-default-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 resize-none text-foreground placeholder:text-foreground/70 backdrop-blur-md transition-all duration-300 shadow-lg"
             rows={4}
             required
             whileFocus={{ scale: 1.02 }}
@@ -153,7 +153,7 @@ export function PostForm() {
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <label className="text-sm font-medium text-white">ポイント:</label>
+          <label className="text-sm font-medium text-foreground">ポイント:</label>
           <div className="flex space-x-2">
             {[50, 100, 200, 300].map((point, index) => (
               <motion.button
@@ -163,10 +163,10 @@ export function PostForm() {
                 disabled={availablePoints < point}
                 className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                   points === point
-                    ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg'
+                    ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-foreground shadow-lg'
                     : availablePoints < point
                       ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
-                      : 'bg-white/20 text-white/90 hover:bg-white/30 border border-white/30'
+                      : 'bg-default-200 text-foreground/90 hover:bg-default-300 border border-default-300'
                 } backdrop-blur-md shadow-md`}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -179,7 +179,7 @@ export function PostForm() {
             ))}
           </div>
           <motion.div 
-            className="text-sm text-white/60"
+            className="text-sm text-foreground/60"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
