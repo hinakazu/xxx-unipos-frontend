@@ -96,7 +96,7 @@ export function PostForm() {
   };
 
   return (
-    <EnhancedCard variant="gradient" animated={true} glowEffect={true}>
+    <EnhancedCard variant="glass" animated={true} glowEffect={true}>
       <motion.form 
         onSubmit={handleSubmit} 
         className="space-y-4"
