@@ -108,6 +108,19 @@ export function usePoints() {
     return false;
   };
 
+  // ポイントを返却する関数（API失敗時のロールバック用）
+  const refundPoints = (amount: number): void => {
+    if (!session?.user?.id) return;
+    
+    const newPoints = pointsData.availablePoints + amount;
+    setPointsData(prev => ({
+      ...prev,
+      availablePoints: newPoints,
+    }));
+    const userPointsKey = `availablePoints_${session.user.id}`;
+    localStorage.setItem(userPointsKey, newPoints.toString());
+  };
+
   // 次のリセットまでの残り時間を取得
   const getTimeUntilReset = (): string => {
     const now = new Date();
@@ -152,6 +165,7 @@ export function usePoints() {
     lastResetDate: pointsData.lastResetDate,
     nextResetDate: pointsData.nextResetDate,
     usePoints,
+    refundPoints,
     getTimeUntilReset,
   };
 }

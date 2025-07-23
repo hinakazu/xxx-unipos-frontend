@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { Award, ThumbsUp, Heart, Star, Smile } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePoints } from '@/hooks/usePoints';
@@ -41,8 +41,8 @@ interface PostCardProps {
 
 export function PostCard({ post }: PostCardProps) {
   const [goodCount, setGoodCount] = useState(post.goodCount);
-  const [isLiking, setIsLiking] = useState(false);
-  const { availablePoints, usePoints: consumePoints } = usePoints();
+  const [isPending, startTransition] = useTransition();
+  const { availablePoints, usePoints: consumePoints, refundPoints } = usePoints();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -83,41 +83,60 @@ export function PostCard({ post }: PostCardProps) {
   };
 
   const handleGoodClick = async () => {
-    if (isLiking) return;
+    // 連続クリック防止（ただし、UI更新は即座に行う）
+    if (isPending) return;
     
-    if (!consumePoints(1)) {
+    // ポイント不足チェック
+    if (availablePoints < 1) {
       alert('ポイントが不足しています');
       return;
     }
 
-    setIsLiking(true);
+    // 1. オプティミスティックアップデート：UIを即座に更新
+    const originalGoodCount = goodCount;
+    const newGoodCount = goodCount + 1;
+    setGoodCount(newGoodCount);
     
-    try {
-      const response = await fetch(`/api/posts/${post.id}/like`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setGoodCount(result.goodCount);
-        console.log('Good clicked, point sent');
-        // 統計を更新
-        triggerRefresh();
-      } else {
-        const error = await response.json();
-        alert(error.error || 'エラーが発生しました');
-        // ポイントを元に戻す処理が必要な場合はここに実装
-      }
-    } catch (error) {
-      console.error('Error liking post:', error);
-      alert('エラーが発生しました');
-      // ポイントを元に戻す処理が必要な場合はここに実装
-    } finally {
-      setIsLiking(false);
+    // ポイントを即座に消費（オプティミスティック）
+    if (!consumePoints(1)) {
+      // もしここで失敗したら、UIを元に戻す
+      setGoodCount(originalGoodCount);
+      alert('ポイントが不足しています');
+      return;
     }
+
+    // 2. バックグラウンドでAPI通信
+    startTransition(async () => {
+      try {
+        const response = await fetch(`/api/posts/${post.id}/like`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          // サーバーからの正確な値でUIを同期
+          setGoodCount(result.goodCount);
+          console.log('Good clicked, point sent');
+          // 統計を更新
+          triggerRefresh();
+        } else {
+          // 3. API失敗時：UIとポイントをロールバック
+          const error = await response.json();
+          setGoodCount(originalGoodCount);
+          refundPoints(1);
+          alert(error.error || 'エラーが発生しました');
+        }
+      } catch (error) {
+        // 3. ネットワークエラー時：UIとポイントをロールバック
+        console.error('Error liking post:', error);
+        setGoodCount(originalGoodCount);
+        refundPoints(1);
+        alert('ネットワークエラーが発生しました');
+      }
+    });
   };
 
   return (
@@ -201,7 +220,7 @@ export function PostCard({ post }: PostCardProps) {
         <div className="flex items-center space-x-4">
           <motion.button 
             onClick={handleGoodClick}
-            disabled={availablePoints < 1 || isLiking}
+            disabled={availablePoints < 1}
             className="group relative flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-emerald-400/30 hover:from-emerald-500/30 hover:to-blue-500/30 hover:border-emerald-400/50 hover:shadow-lg hover:shadow-emerald-500/25 disabled:from-gray-500/10 disabled:to-gray-500/10 disabled:border-gray-500/20 disabled:cursor-not-allowed transition-all duration-300"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -212,11 +231,11 @@ export function PostCard({ post }: PostCardProps) {
             <div className="flex items-center space-x-2">
               <motion.div 
                 className="relative"
-                animate={isLiking ? { rotate: [0, 15, -15, 0] } : {}}
-                transition={{ duration: 0.6, repeat: isLiking ? Infinity : 0 }}
+                animate={isPending ? { rotate: [0, 15, -15, 0] } : {}}
+                transition={{ duration: 0.6, repeat: isPending ? Infinity : 0 }}
               >
                 <ThumbsUp className="w-5 h-5 text-emerald-400 group-hover:text-emerald-300 transition-colors" />
-                {isLiking && (
+                {isPending && (
                   <motion.div 
                     className="absolute -inset-1 bg-emerald-400/30 rounded-full"
                     animate={{ scale: [1, 1.2, 1] }}
@@ -226,7 +245,7 @@ export function PostCard({ post }: PostCardProps) {
               </motion.div>
               <div className="flex flex-col items-start">
                 <span className="text-sm font-medium text-white leading-tight">
-                  {isLiking ? 'グッド中...' : 'グッド'}
+                  グッド
                 </span>
                 {goodCount > 0 && (
                   <motion.div 
