@@ -357,34 +357,47 @@ export function Header() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
-              <Dropdown>
+              <Dropdown 
+                classNames={{
+                  base: "before:bg-transparent",
+                  content: "p-0 border-0 shadow-none heroui-dropdown-menu",
+                }}
+              >
                 <DropdownTrigger>
                   <Button variant="light" className="p-0 min-w-0 gap-2 text-white/80 hover:text-white hover:bg-white/10 backdrop-blur-md">
                     <Avatar size="sm" name={session?.user?.name || "ユーザー"} className="bg-gradient-to-r from-pink-500 to-violet-500 text-white" />
                     <span className="hidden md:block text-sm font-medium">{session?.user?.name || "ユーザー"}</span>
                   </Button>
                 </DropdownTrigger>
-            <DropdownMenu onAction={(key) => handleDropdownAction(key as string)}>
-              <DropdownItem 
-                key="profile" 
-                startContent={<User className="w-4 h-4" />}
-              >
-                プロフィール
-              </DropdownItem>
-              <DropdownItem 
-                key="settings" 
-                startContent={<Settings className="w-4 h-4" />}
-              >
-                設定
-              </DropdownItem>
-              <DropdownItem 
-                key="logout" 
-                color="danger" 
-                startContent={<LogOut className="w-4 h-4" />}
-              >
-                ログアウト
-              </DropdownItem>
-            </DropdownMenu>
+                <DropdownMenu 
+                  onAction={(key) => handleDropdownAction(key as string)}
+                  className="p-0 bg-transparent border-0"
+                  itemClasses={{
+                    base: "text-white data-[hover=true]:bg-white/20 data-[selectable=true]:focus:bg-white/20 data-[focus-visible=true]:bg-white/20",
+                  }}
+                >
+                  <DropdownItem 
+                    key="profile" 
+                    startContent={<User className="w-4 h-4 text-white" />}
+                    className="text-white data-[hover=true]:bg-white/20"
+                  >
+                    プロフィール
+                  </DropdownItem>
+                  <DropdownItem 
+                    key="settings" 
+                    startContent={<Settings className="w-4 h-4 text-white" />}
+                    className="text-white data-[hover=true]:bg-white/20"
+                  >
+                    設定
+                  </DropdownItem>
+                  <DropdownItem 
+                    key="logout" 
+                    startContent={<LogOut className="w-4 h-4 text-red-400" />}
+                    className="text-red-400 data-[hover=true]:bg-red-500/20"
+                  >
+                    ログアウト
+                  </DropdownItem>
+                </DropdownMenu>
               </Dropdown>
             </motion.div>
           </NavbarItem>
