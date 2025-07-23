@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { Bell, Search, User, Settings, LogOut } from 'lucide-react';
@@ -175,18 +176,24 @@ export function Header() {
         <NavbarBrand>
           <Link href="/" className="flex items-center space-x-2">
             <motion.div 
-              className="w-8 h-8 bg-gradient-to-r from-pink-500 to-violet-500 rounded-lg flex items-center justify-center"
-              whileHover={{ scale: 1.1, rotate: 360 }}
+              className="w-8 h-8 flex items-center justify-center"
+              whileHover={{ scale: 1.1 }}
               transition={{ duration: 0.3 }}
             >
-              <span className="text-white font-bold text-lg">U</span>
+              <Image
+                src="/nexx.png"
+                alt="NEXXDAO Logo"
+                width={32}
+                height={32}
+                className="object-contain"
+              />
             </motion.div>
             <motion.span 
               className="text-xl font-bold text-white"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
-              Unipos
+              NEXXDAO
             </motion.span>
           </Link>
         </NavbarBrand>

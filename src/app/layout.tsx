@@ -7,19 +7,19 @@ import { DynamicBackground } from '@/components/ui/DynamicBackground';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Unipos - 感謝と称賛のプラットフォーム',
+  title: 'NEXXDAO - 感謝と称賛のプラットフォーム',
   description: '社内のコミュニケーションを促進し、感謝と称賛を可視化するプラットフォーム',
   keywords: ['unipos', '感謝', '称賛', 'コミュニケーション', 'チームワーク', 'ポイント'],
-  authors: [{ name: 'Unipos Team' }],
+  authors: [{ name: 'NEXXDAO Team' }],
   openGraph: {
-    title: 'Unipos - 感謝と称賛のプラットフォーム',
+    title: 'NEXXDAO - 感謝と称賛のプラットフォーム',
     description: '社内のコミュニケーションを促進し、感謝と称賛を可視化するプラットフォーム',
     type: 'website',
     locale: 'ja_JP',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Unipos - 感謝と称賛のプラットフォーム',
+    title: 'NEXXDAO - 感謝と称賛のプラットフォーム',
     description: '社内のコミュニケーションを促進し、感謝と称賛を可視化するプラットフォーム',
   },
   icons: {
