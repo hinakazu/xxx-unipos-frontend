@@ -273,9 +273,9 @@ export function Header() {
                     </Button>
                   </motion.div>
                 </PopoverTrigger>
-            <PopoverContent className="w-80">
-              <Card className="card-gradient border-0">
-                <CardHeader className="flex flex-row items-center justify-between">
+            <PopoverContent className="w-80 bg-transparent border-0 shadow-none">
+              <Card className="card-gradient border-0" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.10) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
+                <CardHeader className="flex flex-row items-center justify-between" style={{ background: 'transparent' }}>
                   <h3 className="font-semibold text-white">通知</h3>
                   {unreadCount > 0 && (
                     <Button
@@ -288,7 +288,7 @@ export function Header() {
                     </Button>
                   )}
                 </CardHeader>
-                <CardBody className="max-h-80 overflow-y-auto">
+                <CardBody className="max-h-80 overflow-y-auto" style={{ background: 'transparent' }}>
                   {isLoadingNotifications ? (
                     <div className="flex justify-center py-4">
                       <div className="text-white/60">読み込み中...</div>

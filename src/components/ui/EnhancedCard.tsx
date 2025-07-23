@@ -58,15 +58,19 @@ export function EnhancedCard({
           hoverable ? 'hover:shadow-3xl hover:border-white/40' : ''
         } transition-all duration-300`}
         style={{
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.10) 100%)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          borderRadius: '16px',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)',
         }}
       >
         {header && (
-          <CardHeader className="pb-0">
+          <CardHeader className="pb-0" style={{ background: 'transparent' }}>
             {header}
           </CardHeader>
         )}
-        <CardBody className="p-6">
+        <CardBody className="p-6" style={{ background: 'transparent' }}>
           {children}
         </CardBody>
       </Card>
