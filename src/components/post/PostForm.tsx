@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Send } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePoints } from '@/hooks/usePoints';
@@ -23,6 +24,7 @@ export function PostForm() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { availablePoints, usePoints: consumePoints, getTimeUntilReset } = usePoints();
+  const router = useRouter();
 
   // ユーザー一覧を取得
   useEffect(() => {
@@ -74,14 +76,18 @@ export function PostForm() {
       if (response.ok) {
         const result = await response.json();
         console.log('投稿成功:', result);
+        
+        // クライアントサイドのポイントも減算
+        consumePoints(points);
+        
         setContent('');
         setSelectedUser('');
         setPoints(50);
         alert('投稿しました！');
         // 統計とタイムラインを更新
         triggerRefresh();
-        // ページをリロードしてタイムラインを更新
-        window.location.reload();
+        // サーバーデータを再検証してUIを更新
+        router.refresh();
       } else {
         const error = await response.json();
         console.error('投稿エラー:', error);
